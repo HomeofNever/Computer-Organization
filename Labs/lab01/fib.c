@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
     printf("Input the fib number: ");
     scanf("%ld",&fib);
      
-    //result = fib1(fib);
-    result = fib2(fib);
+    result = fib1(fib);
+    //result = fib2(fib);
     printf("The result is: %ld",result);
      
     return 0;

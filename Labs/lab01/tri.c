@@ -15,7 +15,7 @@ void second(int num) {
     for (int i = 0; i < num; i++){
         int size = i * 2 + 1;
         char str[size + 1];
-        memset(str, '*', size * sizeof(char));
+        memset(str, '*', size);
         str[size] = '\0';
         printf("%s\n", str);
     }
@@ -30,7 +30,7 @@ int main() {
     printf("What is n? ");
     int num;
     scanf("%d", &num);
-    // first(num);
-    second(num);
+    first(num);
+    //second(num);
     calc(num);
 }
