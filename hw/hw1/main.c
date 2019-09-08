@@ -11,10 +11,10 @@ struct Matrix{
 };
 
 void initMatrix(struct Matrix *m) {
-  m->data = malloc(m->row * sizeof(int *));
+  m->data = calloc(m->row, sizeof(int *));
   for (int i = 0; i < m->row; i++) {
     // init each slot
-    m->data[i] = malloc(m->col * sizeof(int));
+    m->data[i] = calloc(m->col, sizeof(int));
   }
 }
 
@@ -113,17 +113,17 @@ int main(int argc, char *argv[])
     a.row = ax;
     a.col = ay;
     initMatrix(&a);
-    aLengths = malloc(a.col * sizeof(int));
+    aLengths = calloc(a.col, sizeof(int));
 
     b.row = bx;
     b.col = by;
     initMatrix(&b);
-    bLengths = malloc(b.col * sizeof(int));
+    bLengths = calloc(b.col, sizeof(int));
 
     result.row = ax;
     result.col = by;
     initMatrix(&result);
-    resultLengths = malloc(result.col * sizeof(int));
+    resultLengths = calloc(result.col, sizeof(int));
 
     // User Input
     printf("Please enter the values for the first matrix (%dx%d)\n", ax, ay);
