@@ -4,16 +4,92 @@
 #include <stdlib.h>
 #include <math.h>
 
-void printArr( int x, int y, int* arr ) {
-    for (int i = 0; i < x; i++) {
-        for (int j = 0; j < y; j++) {
-            printf("%d ", *(*(arr + i) + j));
-        }
-        printf("\n");
-    }
+struct Matrix{
+    int row;
+    int col;
+    int **data;
+};
+
+void initMatrix(struct Matrix *m) {
+  m->data = malloc(m->row * sizeof(int *));
+  for (int i = 0; i < m->row; i++) {
+    // init each slot
+    m->data[i] = malloc(m->col * sizeof(int));
+  }
 }
 
-int main( int argc, char * argv[] )
+void freeMatrix(struct Matrix *m) {
+  for (int i = 0; i < m->row; i++) {
+    free(m->data[i]);
+  }
+  free(m->data);
+}
+
+void readMatrix(struct Matrix *m) {
+  for (int i = 0; i < m->row; i++) {
+    for (int j = 0; j < m->col; j++) {
+      scanf("%d", &m->data[i][j]);
+    }
+  }
+}
+
+int length(int num)
+{
+  int count = 0;
+  while(num != 0)
+  {
+    num /= 10;
+    count++;
+  }
+  return count;
+}
+
+void calculateLength(int *a, struct Matrix *m) {
+  for (int j = 0; j < m->col; j++) {
+    int tmp = -1;
+    for (int i = 0; i < m->row; i++) {
+      int l = length(m->data[i][j]);
+      if (l > tmp) {
+        tmp = l;
+      }
+    }
+    a[j] = tmp;
+  }
+}
+
+void printMatrix(int *lengths, struct Matrix *m) {
+  for (int i = 0; i < m->row; i++) {
+    printf("[");
+    for (int j = 0; j < m->col; j++) {
+      // First, acquire current length
+      int len = length(m->data[i][j]);
+      // # of space acquired
+      int diff = lengths[j] - len;
+      for (int k = 0; k < diff; k++) {
+        printf(" ");
+      }
+      printf("%d", m->data[i][j]);
+      // There should be space between numbers
+      // Except the last one (no number behind)
+      if (j != m->col - 1) {
+        printf(" ");
+      }
+    }
+    printf("]\n");
+  }
+}
+
+void multipleMatrix(struct Matrix *a, struct Matrix *b, struct Matrix *result) {
+  for (int i = 0; i < a->row; i++) {
+    for (int j = 0; j < a->col; j++) {
+      for (int k = 0; k < b->col; k++) {
+        result->data[i][k] += a->data[i][j] * b->data[j][k];
+      }
+    }
+  }
+}
+
+int main(int argc, char *argv[])
 {
 /* Ensure we have the correct number of command-line arguments */
     if ( argc != 5 ) {
@@ -30,20 +106,53 @@ int main( int argc, char * argv[] )
         fprintf( stderr, "ERROR: Invalid inputs!\n");
     }
 
-    // init int arr
-    int a[ax][ay];
-    int b[bx][by];
+    // init
+    struct Matrix a, b, result;
+    int *aLengths, *bLengths, *resultLengths;
 
+    a.row = ax;
+    a.col = ay;
+    initMatrix(&a);
+    aLengths = malloc(a.col * sizeof(int));
+
+    b.row = bx;
+    b.col = by;
+    initMatrix(&b);
+    bLengths = malloc(b.col * sizeof(int));
+
+    result.row = ax;
+    result.col = by;
+    initMatrix(&result);
+    resultLengths = malloc(result.col * sizeof(int));
+
+    // User Input
     printf("Please enter the values for the first matrix (%dx%d)\n", ax, ay);
-    for (int i = 0; i < ax; i++) {
-        for (int j = 0; j < ay; j++) {
-            scanf("%d", (&(&a)[i])[j]);
-        }
-    }
-    printArr(ax, ay, a);
-    printf("Please enter the values for the second matrix (%dx%d)", bx, by);
+    readMatrix(&a);
+    calculateLength(aLengths, &a);
 
-    printf("%d, %d, %d, %d", ax, ay, bx, by);
+    printf("Please enter the values for the second matrix (%dx%d)\n", bx, by);
+    readMatrix(&b);
+    calculateLength(bLengths, &b);
+
+    // Calculation
+    multipleMatrix(&a, &b, &result);
+    calculateLength(resultLengths, &result);
+
+    // Result
+    printf("\n");
+    printMatrix(aLengths, &a);
+    printf("multiplied by\n");
+    printMatrix(bLengths, &b);
+    printf("equals\n");
+    printMatrix(resultLengths, &result);
+
+    // Free as a bird!
+    free(aLengths);
+    free(bLengths);
+    free(resultLengths);
+    freeMatrix(&a);
+    freeMatrix(&b);
+    freeMatrix(&result);
 
     return EXIT_SUCCESS;
 }
