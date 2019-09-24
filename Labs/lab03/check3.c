@@ -9,11 +9,11 @@ int main(int argc, char * argv[]) {
     if (f == NULL) perror ("Error opening file");
     else {
         while (fgets (str , 128 , f) != NULL ) {
-            int len = strlen(str);
-            int count = 0;
-            for (int i = 0; i < len; i++) {
-                if (isalnum(str[i])) {
-                    printf("%c", str[i]);
+            char * c = str;
+            char count = 0;
+            for (; *c != '\0'; c++) {
+                if (isalnum(*c)) {
+                    printf("%c", *c);
                     count++;
                 }
             }

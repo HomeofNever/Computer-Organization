@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
 
     if (ay != bx) {
         fprintf( stderr, "ERROR: Invalid inputs!\n");
+        return EXIT_FAILURE;
     }
 
     // init
@@ -126,11 +127,11 @@ int main(int argc, char *argv[])
     resultLengths = calloc(result.col, sizeof(int));
 
     // User Input
-    printf("Please enter the values for the first matrix (%dx%d)\n", ax, ay);
+    printf("Please enter the values for the first matrix (%dx%d):\n", ax, ay);
     readMatrix(&a);
     calculateLength(aLengths, &a);
 
-    printf("Please enter the values for the second matrix (%dx%d)\n", bx, by);
+    printf("Please enter the values for the second matrix (%dx%d):\n", bx, by);
     readMatrix(&b);
     calculateLength(bLengths, &b);
 

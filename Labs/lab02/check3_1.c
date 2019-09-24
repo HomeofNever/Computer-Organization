@@ -7,9 +7,9 @@
 long fib_native(long a) 
 {
     if (a == 0) {
-        return 0;
+        return 2;
     } else if (a == 1) {
-        return 1;
+        return 5;
     } else {
         return fib_native(a - 1) + fib_native(a - 2);
     }
@@ -18,10 +18,10 @@ long fib_native(long a)
 long fib_array(long a, long *cache) 
 {
     if (a == 0) {
-        return 0;
+        return 2;
     } else if (a == 1) {
-        return 1;
-    }else if (cache[a] != 0) {
+        return 5;
+    } else if (cache[a] != 0) {
         return cache[a];
     } else {
         cache[a] = fib_array(a - 1, cache) + fib_array(a - 2, cache);
