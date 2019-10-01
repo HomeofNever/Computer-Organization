@@ -4,11 +4,12 @@
 str1:	.asciiz "GCD( "
 str2:	.asciiz ", "
 str3:	.asciiz " ) is " 
+str4:	.asciiz "\n"
 
        .text
        .globl main
-main:  li $t0, 45
-       li $t1, 54
+main:  li $t0, 105
+       li $t1, 252
        move $t3, $t0
        move $t4, $t1	# Make Copy of origin value
        bgt $t1, $t0, loop
@@ -52,6 +53,11 @@ print:
        move $a0, $t1
        syscall         # print number 3
        
-       jr $ra
+       li $v0, 4
+       la $a0, str4
+       syscall         # print str4
+       
+       
+#       jr $ra
        
 
