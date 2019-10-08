@@ -11,9 +11,11 @@
 #define REGNUM 0
 #define REGT 1
 #define REGS 2
+#define REGZERO 3
 #define ENDLINE ';'
 #define EQ '='
 #define UNREG -1
+#define MAXTREG 9
 
 // A record is a number - 0 or a $s register (for vars) or a $t register (for temp).
 struct Record
@@ -36,23 +38,38 @@ int alphabet2num(char a) {
 }
 
 void printRecord(struct Record r) {
-  if (r.type == REGNUM) {
-    printf("%d", r.data);
-  } else if (r.type == REGS) {
-    printf("$%c%d", 's', r.data);
-  } else if (r.type == REGT) {
-    printf("$%c%d", 't', r.data);
-  } else {
-    fprintf(stderr, "Unrecognized Record type: does something goes wrong?\n");
+  switch(r.type) {
+    case REGNUM:
+      printf("%d", r.data);
+      break;
+    case REGS:
+      printf("$%c%d", 's', r.data);
+      break;
+    case REGT:
+      printf("$%c%d", 't', r.data);
+      break;
+    case REGZERO:
+      printf("$zero");
+      break;
+    default:
+      fprintf(stderr, "Unrecognized Record type: does something goes wrong?\n");
   }
 }
 
 void printLine(struct Line l) {
   // Operation
   if (l.operation == OPPLUS) {
-    printf("add ");
+    if (l.third.type == REGNUM) {
+      printf("addi ");
+    } else {
+      printf("add  ");
+    }
   } else if (l.operation == OPMINUS) {
-    printf("sub ");
+    if (l.third.type == REGNUM) {
+      printf("addi ");
+    } else {
+      printf("sub  ");
+    }
   } else {
     fprintf(stderr, "Unrecognized Operation type: does something goes wrong?\n");
   }
@@ -62,6 +79,9 @@ void printLine(struct Line l) {
   printf(",");
   printRecord(l.second);
   printf(",");
+  if (l.third.type == REGNUM && l.operation == OPMINUS) {
+    printf("-");
+  }
   printRecord(l.third);
   printf("\n");
 }
@@ -177,7 +197,7 @@ int main( int argc, char * argv[] )
         stageSMapper(stage, &current_var1, &current_var2, alphabet[alphabet2num(c)]);
         stage++;
       } else {
-        fprintf( stderr, "Parsing error...1\n" );
+        fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
     } else if (isdigit(c)) {
@@ -186,14 +206,14 @@ int main( int argc, char * argv[] )
         stageNMapper(stage, &current_var1, &current_var2, num);
         stage++;
       } else {
-        fprintf( stderr, "Parsing error...2\n" );
+        fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
     } else if(c == EQ) {
       if (stage == 1) {
         stage = 0; // Reset progress
       } else {
-        fprintf( stderr, "Parsing error...3\n" );
+        fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
     } else if (c == OPMINUS){
@@ -201,7 +221,7 @@ int main( int argc, char * argv[] )
         current_op = OPMINUS;
         stage++;
       } else {
-        fprintf( stderr, "Parsing error...4\n" );
+        fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
     } else if (c == OPPLUS) {
@@ -209,23 +229,43 @@ int main( int argc, char * argv[] )
         current_op = OPPLUS;
         stage++;
       } else {
-        fprintf( stderr, "Parsing error...5\n" );
+        fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
     } else {
-        fprintf( stderr, "Parsing error...6\n" );
+        fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
     } // End of registering vars
 
     // Begin of building Line
     if (stage == 3) {
+      // We need to check if the t register has used up
+      if (t_register > MAXTREG) {
+        t_register = 0;
+      }
+
       // It is time to build a new line!
+      // Special condition: if the first part is intdata while the second one is a s data
+      // We need to build two line
+      if (current_var1.type == REGNUM) {
+        mips[mips_line].operation = OPPLUS;
+        mips[mips_line].second.type = REGZERO;
+        mips[mips_line].second.data = REGZERO;
+        mips[mips_line].third = current_var1;
+        mips[mips_line].first.type = REGT;
+        mips[mips_line].first.data = t_register;
+        current_var1.type = REGT;
+        current_var1.data = t_register;
+        t_register++;
+        mips_line++;
+      }
+
       mips[mips_line].operation = current_op;
       mips[mips_line].second = current_var1;
       mips[mips_line].third = current_var2;
       mips[mips_line].first.type = REGT;
       mips[mips_line].first.data = t_register;
-      // Since we have assigned T, we need to switch the 1 to our vars
+      // Since we have assigned T, we need to switch var 1 to our vars
       current_var1.type = REGT;
       current_var1.data = t_register;
       t_register++;
