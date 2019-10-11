@@ -20,17 +20,11 @@ msg6:	.asciiz "equals\n"
 
         # global parameters n, k, and m (e.g., 4x3 multiply by 3x4),
         # which the user inputs in the matrix_size procedure
+msg0:   .asciiz "Please enter values for n, k, and m:\n"
 n:      .word 4
 k:      .word 3
 m:      .word 4
 intsize: .word 4
-
-
-txt1:   .asciiz "Please enter values for n, k, and m:\n"
-txt2:   .asciiz "Please enter values for the first matrix ("
-txt3:   .asciiz "Please enter values for the second matrix ("
-txt4:   .asciiz "x"
-txt5:   .asciiz "):"
 
 ################################################################################
 
@@ -47,7 +41,7 @@ matrix_sizes:
         # Ask the user for the matrix sizes, i.e., n, k, and m,
         # which correspond to multiplying an nxk matrix by a kxm matrix
         li $v0, 4
-        la $a0, txt1 # Print N
+        la $a0, msg0 # Print N
         syscall
         
         li $v0, 5  # Var N
@@ -67,8 +61,10 @@ matrix_sizes:
 matrix_ask:
         # Ask the user for the matrix values to store in
         # the memory address indicated by the $a0 register
-        addi	$sp,$sp,-4
+        # $a1 row, $a2 col, $a3 word
+       addi	$sp,$sp,-8
 	sw	$ra,0($sp)
+	sw	$a0,4($sp)
 	
 	li	$v0,4
 	la	$a0,msg2
@@ -79,31 +75,44 @@ matrix_ask:
 	syscall
 	
 	li	$v0,4
-	move 	$a0, msg3
+	la 	$a0, msg3
+	syscall
+	
+	li	$v0,1
+	move 	$a0, $a1
 	syscall
 	
 	li	$v0,4
-	move 	$a0, msg3
+	la 	$a0, x
 	syscall
 	
+	li	$v0,1
+	move 	$a0, $a2
+	syscall
 	
-	li	$t0,0 #counter
-	lw	$t1, intsize
+	li	$v0,4
+	la 	$a0, msg4
+	syscall
+	# END OF LINE
+	
+	lw	$a0,4($sp) # recover $a0
+	li	$t0,0 # counter
+	lw	$t1, intsize # int size
 	mul	$t2,$a1,$a2 # total number
-	add	$t3, $s0, $zero # memory address
-	ReadLoop:
-		beq	$t0,$t2,ExitReadLoop
-		sub	$t3, $t3, $t1
+	move	$t3, $a0 # memory address
+	read_loop:
+		beq	$t0,$t2,exit_read_loop
 		li	$v0, 5
 		syscall
 		sw	$v0, 0($t3)
+		add	$t3, $t3, $t1
 		addi	$t0,$t0,1
-		j	ReadLoop
-	ExitReadLoop:
-	
-	lw	$ra,0($sp)
-	addi	$sp,$sp,4
-        jr $ra
+		j	read_loop
+	exit_read_loop:
+		lw	$ra,0($sp)
+		lw	$a0,4($sp)
+		addi	$sp,$sp,8
+       jr $ra
 
 ################################################################################
 
@@ -116,45 +125,42 @@ main:
         # Allocate space for matrices
         # First Matrix $s0 * $s1
         mul $t0, $s0, $s1
-       	move $a0, $t0
-	li $v0, 9
-	syscall
-	move $s3, $v0 # Save Address
+        move $a0, $t0
+	 li $v0, 9
+	 syscall
+	 move $s3, $v0 # Save Address
         # Second Matrix $s1 * $s2
         mul $t0, $s1, $s2
-  	move $a0, $t0
-	li $v0, 9
-	syscall
-	move $s4, $v0 # Save Address
+  	 move $a0, $t0
+	 li $v0, 9
+	 syscall
+	 move $s4, $v0 # Save Address
         # result matrix (maybe we need 64)
         mul $t3, $s0, $s2
         move $a0, $t0
-	li $v0, 9
-	syscall
-	move $s5, $v0 # Save Address
+	 li $v0, 9
+	 syscall
+	 move $s5, $v0 # Save Address
 
 	
-	move $a0, $s3 # Memory address
-	move $a1, $s0
-	move $a2, $s1
+	 move $a0, $s3 # Memory address
+	 move $a1, $s0
+	 move $a2, $s1
+	 la   $a3, first_message
         # Get input for matrix A
         jal matrix_ask
-        
-        move $a0, $s3
-	move $a1, $s0
-	move $a2, $s1
-        jal matrix_print #Debug
 
-	move $a0, $s4 # Memory address
-	move $a1, $s2
-	move $a2, $s3
+	 move $a0, $s4 # Memory address
+	 move $a1, $s1
+	 move $a2, $s2
+	 la   $a3, second_message
         # Get input for matrix B
         jal matrix_ask
         
 	move $a0, $s3 # Memory address
 	move $a1, $s4
 	move $a2, $s5 # result
-	# Get n, k, from S directly?
+	 # Get n, k, from S directly from save
         # Perform multiplication to get matrix C
         # jal matrix_multiply
 
@@ -162,7 +168,29 @@ main:
 	move $a1, $s0
 	move $a2, $s2
         # Output result
-        jal matrix_print
+                
+        move $a0, $s3
+	 move $a1, $s0
+	 move $a2, $s1
+        jal matrix_print # First Matrix
+        
+        li	$v0,4
+	 la 	$a0, msg5
+	 syscall # MTB
+	                 
+        move $a0, $s4
+	 move $a1, $s1
+	 move $a2, $s2
+        jal matrix_print # Second Matrix
+        
+        li	$v0,4
+	 la 	$a0, msg6
+	 syscall
+	 
+	 move $a0, $s5
+	 move $a1, $s0
+	 move $a2, $s2
+        jal matrix_print # Result Matrix
 
         # Cleanup stack and return
 
@@ -181,8 +209,9 @@ matrix_multiply:
 
 matrix_print:
         # print matrix (address $a0)
-        addi	$sp,$sp,-4
+       addi	$sp,$sp,-8
 	sw	$ra,0($sp)
+	sw	$a0,4($sp) # address
 	
 	move $t0, $a1 # row
 	move $t1, $a2 # col
@@ -192,6 +221,7 @@ matrix_print:
 	li   $t5, 0   # col counter
 	loop_row:
 		beq  	$t4,$t0,exit_loop_row
+		move	$t5, $zero # reset col counter
 		li	$v0,4
 		la	$a0,l_brckt
 		syscall
@@ -207,7 +237,7 @@ matrix_print:
 		syscall
 		
 		addi	$t5,$t5,1 # col counter
-		sub	$t2, $t2, $t3
+		add	$t2, $t2, $t3
 		
 		j	print_row
 	exit_print_row:
@@ -220,11 +250,12 @@ matrix_print:
 		syscall
 	
 		addi	$t4,$t4,1
-		move	$t5, $zero # reset row counter
-		j	print_row
+		j	loop_row
 	
 	exit_loop_row:
 		lw	$ra,0($sp)
-		addi	$sp,$sp,4
+		lw	$a0, 4($sp)
+		addi	$sp,$sp,8
+		
 	jr $ra #EOF
         

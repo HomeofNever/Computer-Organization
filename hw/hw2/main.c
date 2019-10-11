@@ -6,18 +6,23 @@
 #include <string.h>
 #include <ctype.h>
 
-#define OPPLUS '+'
-#define OPMINUS '-'
-#define REGNUM 0
-#define REGT 1
-#define REGS 2
-#define REGZERO 3
+// Operations
+#define OP_PLUS '+'
+#define OP_MINUS '-'
+#define OP_EQ '='
+// Registers
+#define REG_NUM 0
+#define REG_T 1
+#define REG_S 2
+#define REG_ZERO 3
+// Syntax
 #define ENDLINE ';'
-#define EQ '='
+// Init value
 #define UNREG -1
-#define MAXTREG 9
+// Boundaries
+#define MAX_T_REG 9
 
-// A record is a number - 0 or a $s register (for vars) or a $t register (for temp).
+// A record is a number - immediate value(int), a $s register(for vars), or a $t register(for temp).
 struct Record
 {
     int type;
@@ -33,22 +38,23 @@ struct Line
     struct Record third;
 };
 
+// Since each alphabet will only appear once, we can use an char[26] to track them
 int alphabet2num(char a) {
   return a - 'a';
 }
 
 void printRecord(struct Record r) {
   switch(r.type) {
-    case REGNUM:
+    case REG_NUM:
       printf("%d", r.data);
       break;
-    case REGS:
+    case REG_S:
       printf("$%c%d", 's', r.data);
       break;
-    case REGT:
+    case REG_T:
       printf("$%c%d", 't', r.data);
       break;
-    case REGZERO:
+    case REG_ZERO:
       printf("$zero");
       break;
     default:
@@ -58,14 +64,14 @@ void printRecord(struct Record r) {
 
 void printLine(struct Line l) {
   // Operation
-  if (l.operation == OPPLUS) {
-    if (l.third.type == REGNUM) {
+  if (l.operation == OP_PLUS) {
+    if (l.third.type == REG_NUM) {
       printf("addi ");
     } else {
       printf("add  ");
     }
-  } else if (l.operation == OPMINUS) {
-    if (l.third.type == REGNUM) {
+  } else if (l.operation == OP_MINUS) {
+    if (l.third.type == REG_NUM) {
       printf("addi ");
     } else {
       printf("sub  ");
@@ -79,13 +85,15 @@ void printLine(struct Line l) {
   printf(",");
   printRecord(l.second);
   printf(",");
-  if (l.third.type == REGNUM && l.operation == OPMINUS) {
+  if (l.third.type == REG_NUM && l.operation == OP_MINUS) {
+    // Add minus when minus operation and it is an immediate value
     printf("-");
   }
   printRecord(l.third);
   printf("\n");
 }
 
+// Register var if does not appear in the s list
 void register_var(int* alphabet, const char current, int *s_register) {
   int num = alphabet2num(current);
   if (alphabet[num] == UNREG) {
@@ -94,6 +102,7 @@ void register_var(int* alphabet, const char current, int *s_register) {
   }
 }
 
+// Collect immediate value
 unsigned long read_all_digits(const char* line, unsigned long *i, unsigned long strLen) {
   // Read All Digit
   unsigned int index = 0;
@@ -112,34 +121,36 @@ unsigned long read_all_digits(const char* line, unsigned long *i, unsigned long 
   return atoi(digits);
 }
 
+// Register S var to based on current stage
 void stageSMapper(int stage, struct Record *current_var1, struct Record *current_var2, int s_register) {
   switch (stage){
     case 0:
-      current_var1->type = REGS;
+      current_var1->type = REG_S;
       current_var1->data = s_register;
       break;
     case 2:
-      current_var2->type = REGS;
+      current_var2->type = REG_S;
       current_var2->data = s_register;
       break;
     default:
-      fprintf( stderr, "WTF?\n" );
+      fprintf( stderr, "Unknown Stage: does something goes wrong?\n" );
       break;
   }
 }
 
+// Register immediate var to based on current stage
 void stageNMapper(int stage, struct Record *current_var1, struct Record *current_var2, int intdata) {
   switch (stage){
     case 0:
-      current_var1->type = REGNUM;
+      current_var1->type = REG_NUM;
       current_var1->data = intdata;
       break;
     case 2:
-      current_var2->type = REGNUM;
+      current_var2->type = REG_NUM;
       current_var2->data = intdata;
       break;
     default:
-      fprintf( stderr, "WTF?\n" );
+      fprintf( stderr, "Unknown stage: does something goes wrong?\n" );
       break;
   }
 }
@@ -174,17 +185,17 @@ int main( int argc, char * argv[] )
   struct Line mips[100];
   int mips_line = 0;
   // Current Stage
-  int stage = 0; // 0 none, 1 var1 should be assigned, 2 op should be assigned, 3 var2 should be assigned, 4 wrap things up!
+  int stage = 0; // 0 none, 1: var1 should be assigned, 2: op should be assigned, 3: var2 should be assigned, 4: wrap things up!
   struct Record current_var1 = {.type= UNREG, .data = -1};
   char current_op = '?';
   struct Record current_var2 = {.type= UNREG, .data = -1};
-  // Register relationship, the number EQ s0 - s9
+  // Init var relationship: the number EQ s0 - s9
   int alphabet[26];
   for (int i = 0; i < 26; i++) {
     alphabet[i] = UNREG;
   }
 
-  // Ignore Semicolon
+  // Ignore semicolon
   for (unsigned long i = 0; i < strLen; i++) {
     char c = line[i];
     if (c == ENDLINE) {
@@ -209,24 +220,25 @@ int main( int argc, char * argv[] )
         fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
-    } else if(c == EQ) {
+    } else if(c == OP_EQ) {
       if (stage == 1) {
-        stage = 0; // Reset progress
+        stage = 0; // Reset stage: the true expression comes!
       } else {
+        // Wait! LHS should have only one var, right?
         fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
-    } else if (c == OPMINUS){
+    } else if (c == OP_MINUS){
       if (stage == 1) {
-        current_op = OPMINUS;
+        current_op = OP_MINUS;
         stage++;
       } else {
         fprintf( stderr, "Parsing error...\n" );
         return EXIT_FAILURE;
       }
-    } else if (c == OPPLUS) {
+    } else if (c == OP_PLUS) {
       if (stage == 1) {
-        current_op = OPPLUS;
+        current_op = OP_PLUS;
         stage++;
       } else {
         fprintf( stderr, "Parsing error...\n" );
@@ -237,24 +249,24 @@ int main( int argc, char * argv[] )
         return EXIT_FAILURE;
     } // End of registering vars
 
-    // Begin of building Line
+    // Begin building Line
     if (stage == 3) {
       // We need to check if the t register has used up
-      if (t_register > MAXTREG) {
+      if (t_register > MAX_T_REG) {
         t_register = 0;
       }
 
       // It is time to build a new line!
-      // Special condition: if the first part is intdata while the second one is a s data
-      // We need to build two line
-      if (current_var1.type == REGNUM) {
-        mips[mips_line].operation = OPPLUS;
-        mips[mips_line].second.type = REGZERO;
-        mips[mips_line].second.data = REGZERO;
+      // Special condition: if the first part is immediate var while the second one is a s register
+      // We need to build two line at once!
+      if (current_var1.type == REG_NUM) {
+        mips[mips_line].operation = OP_PLUS;
+        mips[mips_line].second.type = REG_ZERO;
+        mips[mips_line].second.data = REG_ZERO;
         mips[mips_line].third = current_var1;
-        mips[mips_line].first.type = REGT;
+        mips[mips_line].first.type = REG_T;
         mips[mips_line].first.data = t_register;
-        current_var1.type = REGT;
+        current_var1.type = REG_T;
         current_var1.data = t_register;
         t_register++;
         mips_line++;
@@ -263,21 +275,23 @@ int main( int argc, char * argv[] )
       mips[mips_line].operation = current_op;
       mips[mips_line].second = current_var1;
       mips[mips_line].third = current_var2;
-      mips[mips_line].first.type = REGT;
+      mips[mips_line].first.type = REG_T;
       mips[mips_line].first.data = t_register;
-      // Since we have assigned T, we need to switch var 1 to our vars
-      current_var1.type = REGT;
+      // Since we have assigned T, we will always switch var 1 to our t register
+      current_var1.type = REG_T;
       current_var1.data = t_register;
       t_register++;
       mips_line++;
       stage = 1;
     } else if (stage == 4) {
+      // Nice! Here should be the end of expression, and let's wrap things up!
       // Assign var to s0, change the last line of the Line Seq
-      mips[mips_line - 1].first.type = REGS;
+      mips[mips_line - 1].first.type = REG_S;
       mips[mips_line - 1].first.data = 0;
     }
   }
 
+  // Print Lines
   for (int i = 0; i < mips_line; i++) {
     printLine(mips[i]);
   }
