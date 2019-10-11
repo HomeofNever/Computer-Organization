@@ -123,24 +123,28 @@ main:
         jal matrix_sizes
 
         # Allocate space for matrices
+       	lw	$s7, intsize 
         # First Matrix $s0 * $s1
         mul $t0, $s0, $s1
+        mul $t0, $t0, $s7 # times size
         move $a0, $t0
 	 li $v0, 9
 	 syscall
-	 move $s3, $v0 # Save Address
+	 move $s3, $v0 # First Save Address
         # Second Matrix $s1 * $s2
         mul $t0, $s1, $s2
+        mul $t0, $t0, $s7
   	 move $a0, $t0
 	 li $v0, 9
 	 syscall
-	 move $s4, $v0 # Save Address
+	 move $s4, $v0 # Second Save Address
         # result matrix (maybe we need 64)
-        mul $t3, $s0, $s2
+        mul $t0, $s0, $s2
+        mul $t0, $t0, $s7
         move $a0, $t0
 	 li $v0, 9
 	 syscall
-	 move $s5, $v0 # Save Address
+	 move $s5, $v0 # Result Save Address
 
 	
 	 move $a0, $s3 # Memory address
@@ -162,13 +166,9 @@ main:
 	move $a2, $s5 # result
 	 # Get n, k, from S directly from save
         # Perform multiplication to get matrix C
-        # jal matrix_multiply
+        jal matrix_multiply
 
-	move $a0, $s3
-	move $a1, $s0
-	move $a2, $s2
         # Output result
-                
         move $a0, $s3
 	 move $a1, $s0
 	 move $a2, $s1
@@ -193,7 +193,8 @@ main:
         jal matrix_print # Result Matrix
 
         # Cleanup stack and return
-
+	li  $v0, 10
+    	syscall
         jr $ra
 
 
@@ -202,7 +203,68 @@ main:
 matrix_multiply:
         # multiply matrix A (address $a0) by  matrix B (address $a1),
         # storing the result in matrix C (address $a2)
-
+       	# s0: n, s1: k, s2: m
+       	
+       	li $t0, 0 # Counter for first row
+       	li $t1, 0 # Counter for first col
+       	li $t2, 0 # Counter for the second col
+       	move $t9, $s0 # A
+       	move $t8, $s1 # B
+       	move $t7, $s2 # Result
+       	# T4, T5, T6 as temp
+       	
+       	loop_first: # loop by row in first matrix
+		beq  	$s0,$t0,exit_loop_first
+		move	$t1, $zero # reset first col counter
+		loop_first_row:
+			beq	$s1,$t1,exit_first_row
+			move	$t2, $zero # reset second col counter
+			loop_second_col:
+				beq	$s2,$t2,exit_second_col
+				# Get first matrix
+				mul $t4, $s1, $t0
+				add $t4, $t4, $t1
+				mul $t4, $s7, $t4 # int size
+				add $t4, $a0, $t4 # address
+				lw $t4, 0($t4)
+				
+				# Get second matrix
+				mul $t5, $s2, $t1
+				add $t5, $t5, $t2
+				mul $t5, $s7, $t5 # int size
+				add $t5, $a1, $t5 # address
+				lw $t5, 0($t5)
+				
+				
+				# do multiple and save to $t4
+				mul $t4, $t4, $t5
+				
+				# Get result matrix
+				mul $t6, $s0, $t0
+				add $t6, $t6, $t2
+				mul $t6, $s7, $t6 # int size 
+				add $t6, $a2, $t6 # address
+				# Save word to t5, we need the address to save back to result matrix!
+				lw $t5, 0($t6)
+				
+				# add 
+				add $t5, $t5, $t4
+				
+				# save result
+				sw $t5, 0($t6)
+				
+				# Increase counter
+				addi $t2, $t2, 1
+		
+				j	loop_second_col
+			exit_second_col:
+				addi	$t1,$t1,1
+				j	loop_first_row
+		exit_first_row:
+			addi	$t0,$t0,1
+			j	loop_first
+       	exit_loop_first: #
+       		
         jr $ra
 
 ################################################################################
