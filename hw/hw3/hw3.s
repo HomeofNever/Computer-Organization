@@ -128,75 +128,78 @@ main:
         mul $t0, $s0, $s1
         mul $t0, $t0, $s7 # times size
         move $a0, $t0
-	 li $v0, 9
-	 syscall
-	 move $s3, $v0 # First Save Address
+	li $v0, 9
+	syscall
+	move $s3, $v0 # First Save Address
         # Second Matrix $s1 * $s2
         mul $t0, $s1, $s2
         mul $t0, $t0, $s7
-  	 move $a0, $t0
-	 li $v0, 9
-	 syscall
-	 move $s4, $v0 # Second Save Address
+  	move $a0, $t0
+	li $v0, 9
+	syscall
+	move $s4, $v0 # Second Save Address
         # result matrix (maybe we need 64)
         mul $t0, $s0, $s2
         mul $t0, $t0, $s7
         move $a0, $t0
-	 li $v0, 9
-	 syscall
-	 move $s5, $v0 # Result Save Address
+	li $v0, 9
+	syscall
+	move $s5, $v0 # Result Save Address
 
 	
-	 move $a0, $s3 # Memory address
-	 move $a1, $s0
-	 move $a2, $s1
-	 la   $a3, first_message
+	move $a0, $s3 # Memory address
+	move $a1, $s0
+	move $a2, $s1
+	la   $a3, first_message
         # Get input for matrix A
         jal matrix_ask
 
-	 move $a0, $s4 # Memory address
-	 move $a1, $s1
-	 move $a2, $s2
-	 la   $a3, second_message
+	move $a0, $s4 # Memory address
+	move $a1, $s1
+	move $a2, $s2
+	la   $a3, second_message
         # Get input for matrix B
         jal matrix_ask
         
 	move $a0, $s3 # Memory address
 	move $a1, $s4
 	move $a2, $s5 # result
-	 # Get n, k, from S directly from save
+	# Get n, k, from S directly from save
         # Perform multiplication to get matrix C
         jal matrix_multiply
 
+	# Separate
+	li  $v0, 4
+	la  $a0, endline
+    	syscall
+	
         # Output result
         move $a0, $s3
-	 move $a1, $s0
-	 move $a2, $s1
+	move $a1, $s0
+	move $a2, $s1
         jal matrix_print # First Matrix
         
         li	$v0,4
-	 la 	$a0, msg5
-	 syscall # MTB
+	la 	$a0, msg5
+	syscall # MTB
 	                 
         move $a0, $s4
-	 move $a1, $s1
-	 move $a2, $s2
+	move $a1, $s1
+	move $a2, $s2
         jal matrix_print # Second Matrix
         
         li	$v0,4
-	 la 	$a0, msg6
-	 syscall
+	la 	$a0, msg6
+	syscall
 	 
-	 move $a0, $s5
-	 move $a1, $s0
-	 move $a2, $s2
+	move $a0, $s5
+	move $a1, $s0
+	move $a2, $s2
         jal matrix_print # Result Matrix
 
         # Cleanup stack and return
 	li  $v0, 10
     	syscall
-        jr $ra
-
 
 ################################################################################
 
@@ -215,10 +218,10 @@ matrix_multiply:
        	
        	loop_first: # loop by row in first matrix
 		beq  	$s0,$t0,exit_loop_first
-		move	$t1, $zero # reset first col counter
+		li	$t1, 0 # reset first col counter
 		loop_first_row:
 			beq	$s1,$t1,exit_first_row
-			move	$t2, $zero # reset second col counter
+			li	$t2, 0 # reset second col counter
 			loop_second_col:
 				beq	$s2,$t2,exit_second_col
 				# Get first matrix
@@ -240,8 +243,8 @@ matrix_multiply:
 				mul $t4, $t4, $t5
 				
 				# Get result matrix
-				mul $t6, $s0, $t0
-				add $t6, $t6, $t2
+				mul $t6, $s2, $t0 # row
+				add $t6, $t6, $t2 # col
 				mul $t6, $s7, $t6 # int size 
 				add $t6, $a2, $t6 # address
 				# Save word to t5, we need the address to save back to result matrix!
