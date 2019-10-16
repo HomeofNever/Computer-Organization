@@ -12,17 +12,15 @@
 int add_two_bits(int d0, int d1, int carry_in, int *carry_out)
 {
     /* FILL IN CODE HERE! */
-    if (d0 == 1 && d1 == 1)
-        *carry_out = 1;
-    else
-        *carry_out = NULL;
+    if (carry_out) // NULL checking
+        *carry_out = (d0 & d1) + (carry_in & (d0 | d1));
 
-    return d0 & d1;
+    return d0 ^ d1 ^ carry_in;
 }
 
 int main()
 {
-    int d0, d1, sum, c_out;
+    int d0, d1, sum, c_out = 0;
 
     printf( "Enter binary digit 0: " );
     scanf( "%d", &d0 );
