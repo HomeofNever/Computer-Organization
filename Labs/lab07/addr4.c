@@ -22,8 +22,8 @@ int add_two_bits(int d0, int d1, int carry_in, int *carry_out)
 int main()
 {
     int i;
-    int d0[4] = { 1, 0, 0, 1 };
-    int d1[4] = { 1, 1, 1, 1 };
+    int d0[4] = { 1, 0, 1, 1 };
+    int d1[4] = { 1, 0, 0, 1 };
     int ci[4] = { 0, 0, 0, 0 };
     int sum[4] = { 0, 0, 0, 0 };
 

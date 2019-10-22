@@ -53,7 +53,7 @@ main: lw $ra,4($sp)
   #j done
 
   la $a1,secret
-  li $a2, 2
+  li $a2, 3
   jal loopmulti
   
   lw $ra,4($sp)

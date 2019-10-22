@@ -5,11 +5,13 @@ for_1: 	.asciiz	", you need:\n"
 quarter_s: .asciiz " quarters\n"
 dime_s:	.asciiz " dime\n"
 penny_s: .asciiz " pennies\n"
+nickel_s: .asciiz " nickles\n"
 
 divider: .float 100.0
 penny:	.word 1
 quarter: .word	25
 dime:	.word 10
+nickel:	.word 5
 
 	.text
 	.globl main
@@ -31,34 +33,52 @@ main:
   	
   	move $a0, $v0
   	move $s0, $v1
+  	beq $a0, $zero, skip_quarter
   	li $v0,1  # quarters
   	syscall
-  	
+
   	la $a0, quarter_s
   	li $v0,4  # print_str
   	syscall
   	
+skip_quarter: 	
   	move $a0, $s0
   	lw $a1, dime
   	jal how_many
   	
   	move $a0, $v0
   	move $s0, $v1
+  	beq $a0, $zero, skip_dime
   	li $v0,1  # dime
   	syscall
   	
   	la $a0, dime_s
   	li $v0,4  # print_str
   	syscall
-  	
+skip_dime:
   	move $a0, $s0
+  	lw $a1, nickel
+  	jal how_many
+  	
+  	move $a0, $v0
+  	move $s0, $v1
+  	beq $a0, $zero, skip_nickel
+  	li $v0,1  # nickel
+  	syscall
+  	
+  	la $a0, nickel_s
+  	li $v0,4  # print_str
+  	syscall
+skip_nickel:
+  	move $a0, $s0
+  	beq $a0, $zero, skip_penny
   	li $v0,1  # penny
   	syscall
   	
   	la $a0, penny_s
   	li $v0,4  # print_str
   	syscall
-  	
+skip_penny:
   	li $v0, 10
   	syscall
 
