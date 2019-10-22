@@ -236,30 +236,42 @@ int main() {
                                     for (B2 = 0; B2 < 2; B2++) {
                                         for (B3 = 0; B3 < 2; B3++) {
                                             total++;
-                                            A4bit = b2i(A0, A1, A2, A3);
-                                            B4bit = b2i(B0, B1, B2, B3);
-                                            alu_4bit(OP0, OP1, A0, A1, A2, A3, B0, B1, B2, B3,
-                                                     &C0, &C1, &C2, &C3);
-                                            C4bit = b2i(C0, C1, C2, C3);
 
-                                            // Expected
-                                            if (OP0 == 0 && OP1 == 0) {
-                                                expected = A4bit & B4bit;
-                                            } else if (OP0 == 1 && OP1 == 1) {
-                                                expected = A4bit - B4bit;
-                                            } else if (OP0 == 0) {
-                                                expected = A4bit + B4bit;
-                                            } else {
-                                                expected = A4bit | B4bit;
-                                            }
+                                            if ( !A3 ) A4bit = 0;
+                                            else A4bit = ~0x7;
 
-                                            // Take only four bit of expected
-                                            expected = expected & 0x0000000f;
+                                            A4bit |= A2 << 2;
+                                            A4bit |= A1 << 1;
+                                            A4bit |= A0;
 
-                                            if (expected != C4bit) {
-                                                printf(" alu_4bit( %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d ) | ( %2d, %2d, %2d, %2d ) | %d \n",
-                                                OP0, OP1, A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, expected);
-                                                failed += 1;
+                                            if ( !B3 ) B4bit = 0;
+                                            else B4bit = ~0x7;
+
+                                            B4bit |= B2 << 2;
+                                            B4bit |= B1 << 1;
+                                            B4bit |= B0;
+
+                                            alu_4bit( OP0, OP1, A0, A1, A2, A3, B0, B1, B2, B3, &C0, &C1, &C2, &C3 );
+
+                                            if ( !C3 ) C4bit = 0;
+                                            else C4bit = ~0x7;
+
+                                            C4bit |= C2 << 2;
+                                            C4bit |= C1 << 1;
+                                            C4bit |= C0;
+
+                                            if ( !OP0 && OP1 ) expected = A4bit + B4bit;
+
+                                            E0 = expected & 0x01;
+                                            E1 = ( expected & 0x02 ) >> 1;
+                                            E2 = ( expected & 0x04 ) >> 2;
+                                            E3 = ( expected & 0x08 ) >> 3;
+
+                                            if ( ( expected & 0xf ) != ( C4bit & 0xf ) ) {
+                                                printf( "alu_4bit( %3d, %3d, %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d ) "
+                                                        "| ( %2d, %2d, %2d, %2d ) | expected ( %2d, %2d, %2d, %2d )\n",
+                                                        OP0, OP1, A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, E0, E1, E2, E3 );
+                                                failed++;
                                             }
                                         }
                                     }
@@ -372,7 +384,7 @@ BIT full_adder_1bit(BIT A, BIT B, BIT CIN, BIT *COUT) {
 BIT alu_1bit(BIT OP0, BIT OP1, BIT CIN, BIT A, BIT B, BIT *COUT) {
     /* TO DO: implement a 1-bit ALU */
     BIT binvert = xor_gate(and_gate(OP0, OP1), B); // Calculate Binvert
-    // CIN = or_gate(and_gate(OP0, OP1), CIN); // Set CIN to 1 when sub
+    CIN = or_gate(and_gate(OP0, OP1), CIN); // Set CIN to 1 when sub
     BIT result = full_adder_1bit(A, binvert, CIN, COUT);
     return multiplexer(
             and_gate(A, B), // 0 0
@@ -404,7 +416,8 @@ void ieee754encode(float value, char *encoded) {
      *  sign: 0
      *  exponent: 10000100
      *  fraction: 11001110000000000000000
-     *  output: 01000010011001110000000000000000
+     *  predit: 0 10000110 01110 01110000000000000
+     *  output: 0 10000100 11001 110000000000000000
      */
 
     printf("input: %f \n", value);
@@ -419,10 +432,18 @@ void ieee754encode(float value, char *encoded) {
     char exponent[8]; // 1 - 8
     char fraction[23]; // 9 - 31
 
+    // init with -1, skip unnecessary
+    for (i = 0; i < 7; i++) {
+        exponent[i] = -1;
+    }
+    for (i = 0; i < 22; i++) {
+        fraction[i] = -1;
+    }
+
     // Convert int to binary
     int int_count = 0, frac_count = 0;
     while (int_part != 0 && int_count < 8) {
-        exponent[int_count] = int_part % 2 ? '1' : '0';
+        exponent[7 - int_count] = int_part % 2 ? '1' : '0';
         int_part /= 2;
         int_count++;
     }
@@ -455,17 +476,23 @@ void ieee754encode(float value, char *encoded) {
 
     // Put whole number part into fraction section, except the first one
     // Signed 1, xxxxxxxx (9). yyyyyyyy
-    int current_location = i;
     j = 1;
-    for (; i < int_count + current_location; i++, j++)
-        encoded[i] = exponent[j];
+    for (; j < int_count; i++, j++)
+        if (exponent[j] != -1)
+            encoded[i] = exponent[j];
+        else
+            break;
 
     // Put Frac into the rest of the section
     j = 0;
     printf("fraction: ");
     for (; i < 31; i++, j++) {
-        encoded[i] = fraction[j];
-        printf("%c", fraction[j]);
+        if (fraction[j] != -1) {
+            encoded[i] = fraction[j];
+        } else {
+            encoded[i] = '0';
+        }
+        printf("%c", encoded[i]);
     }
     printf("\n");
 
