@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -27,6 +28,10 @@ void decoder(BIT, BIT, BIT *, BIT *, BIT *, BIT *);
 BIT alu_1bit(BIT, BIT, BIT, BIT, BIT, BIT *);
 
 void alu_4bit(BIT, BIT, BIT, BIT, BIT, BIT, BIT, BIT, BIT, BIT, BIT *, BIT *, BIT *, BIT *);
+
+int b2i(BIT a, BIT b, BIT c, BIT d) {
+    return a * 2 * 2 * 2 + b * 2 * 2 + c * 2 + d;
+}
 
 /* function prototype (floating point binary conversion) */
 void ieee754encode(float value, char *encoded);
@@ -147,48 +152,48 @@ int main() {
 
 
     /* Unit test for 1-bit ALU:
-     *  OP0 OP1 |  Operation
-     * ---------|--------------
-     *    0   0 |   A * B (AND)
-     *    0   1 |   A + B (OR)
-     *    1   0 |   A + B (ADD)
-     *    1   1 |   A - B (SUB)
-     *
-     *  OP0 OP1 CIN  A  B | RESULT COUT
-     * -------------------|-------------
-     *    0   0   0  0  0 |      0    0
-     *    0   0   0  0  1 |      0    0
-     *    0   0   0  1  0 |      0    0
-     *    0   0   0  1  1 |      1    1
-     *    0   0   1  0  0 |      0    0
-     *    0   0   1  0  1 |      0    1
-     *    0   0   1  1  0 |      0    1
-     *    0   0   1  1  1 |      1    1
-     *    1   0   0  0  0 |      0    0
-     *    1   0   0  0  1 |      1    0
-     *    1   0   0  1  0 |      1    0
-     *    1   0   0  1  1 |      1    1
-     *    1   0   1  0  0 |      0    0
-     *    1   0   1  0  1 |      1    1
-     *    1   0   1  1  0 |      1    1
-     *    1   0   1  1  1 |      1    1
-     *    0   1   0  0  0 |      0    0
-     *    0   1   0  0  1 |      1    0
-     *    0   1   0  1  0 |      1    0
-     *    0   1   0  1  1 |      0    1
-     *    0   1   1  0  0 |      1    0
-     *    0   1   1  0  1 |      0    1
-     *    0   1   1  1  0 |      0    1
-     *    0   1   1  1  1 |      1    1
-     *    1   1   0  0  0 |      1    0
-     *    1   1   0  0  1 |      0    0
-     *    1   1   0  1  0 |      0    1
-     *    1   1   0  1  1 |      1    0
-     *    1   1   1  0  0 |      0    1
-     *    1   1   1  0  1 |      1    0
-     *    1   1   1  1  0 |      1    1
-     *    1   1   1  1  1 |      0    1
-     */
+    *  OP0 OP1 |  Operation
+    * ---------|--------------
+    *    0   0 |   A * B (AND)
+    *    0   1 |   A + B (ADD)
+    *    1   0 |   A + B (OR)
+    *    1   1 |   A - B (SUB)
+    *
+    *  OP0 OP1 CIN  A  B | RESULT COUT
+    * -------------------|-------------
+    *    0   0   0  0  0 |      0    0
+    *    0   0   0  0  1 |      0    0
+    *    0   0   0  1  0 |      0    0
+    *    0   0   0  1  1 |      1    1
+    *    0   0   1  0  0 |      0    0
+    *    0   0   1  0  1 |      0    1
+    *    0   0   1  1  0 |      0    1
+    *    0   0   1  1  1 |      1    1
+    *    0   1   0  0  0 |      0    0
+    *    0   1   0  0  1 |      1    0
+    *    0   1   0  1  0 |      1    0
+    *    0   1   0  1  1 |      0    1
+    *    0   1   1  0  0 |      1    0
+    *    0   1   1  0  1 |      0    1
+    *    0   1   1  1  0 |      0    1
+    *    0   1   1  1  1 |      1    1
+    *    1   0   0  0  0 |      0    0
+    *    1   0   0  0  1 |      1    0
+    *    1   0   0  1  0 |      1    0
+    *    1   0   0  1  1 |      1    1
+    *    1   0   1  0  0 |      0    0
+    *    1   0   1  0  1 |      1    1
+    *    1   0   1  1  0 |      1    1
+    *    1   0   1  1  1 |      1    1
+    *    1   1   0  0  0 |      1    0
+    *    1   1   0  0  1 |      0    0
+    *    1   1   0  1  0 |      0    1
+    *    1   1   0  1  1 |      1    0
+    *    1   1   1  0  0 |      0    1
+    *    1   1   1  0  1 |      1    0
+    *    1   1   1  1  0 |      1    1
+    *    1   1   1  1  1 |      0    1
+    */
     printf("\n===== Unit test for 1-bit alu =====\n");
     printf("alu_1bit( OP0, OP1, CIN, A, B ) | ( RESULT, COUT )\n");
     printf("--------------------------------|------------------\n");
@@ -231,8 +236,31 @@ int main() {
                                     for (B2 = 0; B2 < 2; B2++) {
                                         for (B3 = 0; B3 < 2; B3++) {
                                             total++;
+                                            A4bit = b2i(A0, A1, A2, A3);
+                                            B4bit = b2i(B0, B1, B2, B3);
                                             alu_4bit(OP0, OP1, A0, A1, A2, A3, B0, B1, B2, B3,
-                                                    &C0, &C1, &C2, &C3);
+                                                     &C0, &C1, &C2, &C3);
+                                            C4bit = b2i(C0, C1, C2, C3);
+
+                                            // Expected
+                                            if (OP0 == 0 && OP1 == 0) {
+                                                expected = A4bit & B4bit;
+                                            } else if (OP0 == 1 && OP1 == 1) {
+                                                expected = A4bit - B4bit;
+                                            } else if (OP0 == 0) {
+                                                expected = A4bit + B4bit;
+                                            } else {
+                                                expected = A4bit | B4bit;
+                                            }
+
+                                            // Take only four bit of expected
+                                            expected = expected & 0x0000000f;
+
+                                            if (expected != C4bit) {
+                                                printf(" alu_4bit( %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d ) | ( %2d, %2d, %2d, %2d ) | %d \n",
+                                                OP0, OP1, A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, expected);
+                                                failed += 1;
+                                            }
                                         }
                                     }
                                 }
@@ -245,6 +273,14 @@ int main() {
     }
 
     printf("%d test cases out of %d failed.\n", failed, total);
+
+    printf("\n===== Unit test for ieee754 encode =====\n");
+    char encode[100];
+    ieee754encode(57.750000, &encode);
+    printf("output: ");
+    for (int i = 0; i < 31; i++) {
+        printf("%c", encode[i]);
+    }
 
     return EXIT_SUCCESS;
 }
@@ -336,12 +372,12 @@ BIT full_adder_1bit(BIT A, BIT B, BIT CIN, BIT *COUT) {
 BIT alu_1bit(BIT OP0, BIT OP1, BIT CIN, BIT A, BIT B, BIT *COUT) {
     /* TO DO: implement a 1-bit ALU */
     BIT binvert = xor_gate(and_gate(OP0, OP1), B); // Calculate Binvert
-    CIN = or_gate(and_gate(OP0, OP1), CIN); // Set CIN to 1 when sub
+    // CIN = or_gate(and_gate(OP0, OP1), CIN); // Set CIN to 1 when sub
     BIT result = full_adder_1bit(A, binvert, CIN, COUT);
     return multiplexer(
             and_gate(A, B), // 0 0
-            or_gate(A, B), // 0 1
-            result, // 1 0
+            result, // 0 1
+            or_gate(A, B), // 1 0
             result, // 1 1
             OP0,
             OP1);
@@ -352,11 +388,11 @@ void alu_4bit(BIT OP0, BIT OP1, BIT A0, BIT A1, BIT A2, BIT A3,
               BIT B0, BIT B1, BIT B2, BIT B3,
               BIT *C0, BIT *C1, BIT *C2, BIT *C3) {
     /* TO DO: implement a 4-bit ALU */
-    BIT COUT;
-    *C0 = alu_1bit(OP0, OP1, 0, A0, B0, &COUT);
-    *C1 = alu_1bit(OP0, OP1, COUT, A1, B1, &COUT);
-    *C2 = alu_1bit(OP0, OP1, COUT, A2, B2, &COUT);
+    BIT COUT = and_gate(OP0, OP1);
     *C3 = alu_1bit(OP0, OP1, COUT, A3, B3, &COUT);
+    *C2 = alu_1bit(OP0, OP1, COUT, A2, B2, &COUT);
+    *C1 = alu_1bit(OP0, OP1, COUT, A1, B1, &COUT);
+    *C0 = alu_1bit(OP0, OP1, COUT, A0, B0, &COUT);
 
     return;
 }
@@ -371,113 +407,66 @@ void ieee754encode(float value, char *encoded) {
      *  output: 01000010011001110000000000000000
      */
 
-    printf("input: %f", value);
+    printf("input: %f \n", value);
 
-    char sign = value > 0 ? '1' : '0';
-    printf("sign: %c\n", sign);
+    encoded[0] = value < 0 ? '1' : '0';
+    printf("sign: %c\n", encoded[0]);
 
     int int_part = (int)value;
     float float_part = value - (int)value;
-    int exponent[10];
-    int fraction[24];
     int i = 0, j = 0;
 
-    // Initialize array, fill empty spaces to -1
-    for (i = 0; i < 10; i++) {
-        exponent[i] = -1;
-    }
-    for (i = 0; i < 24; i++) {
-        fraction[i] = -1;
+    char exponent[8]; // 1 - 8
+    char fraction[23]; // 9 - 31
+
+    // Convert int to binary
+    int int_count = 0, frac_count = 0;
+    while (int_part != 0 && int_count < 8) {
+        exponent[int_count] = int_part % 2 ? '1' : '0';
+        int_part /= 2;
+        int_count++;
     }
 
-
-    // Convert int_part to binary
-    i = 0;
-    while(int_part != 0 && i < 10 )
+    // Convert float to binary
+    while(float_part != 0 && frac_count < 24)
     {
-        exponent[i] = int_part % 2;
-        int_part = int_part / 2;
-        i++;
+        fraction[frac_count] = (int)(float_part * 2) >= 1 ? '1' : '0'; // take int part of result
+        float_part = float_part * 2; // * 2
+        float_part = float_part - (int)float_part; // Keep only the right of the decimal
+        frac_count++;
     }
 
-    // Convert float_part to binary
-    j = 0;
-    while(float_part != 0 && j < 24)
-    {
-        fraction[j] = (int)(float_part*2);
-        float_part = float_part * 2;
-        float_part = float_part - (int)float_part;
-        j++;
-    }
-
-    int int_count = i;
-    int float_count = j;
-    int fraction_part_count = i + j;
-    int exponent_number = i - 1 + 127;
-    int fraction_pointer = 9;
-
-
+    int bias = pow(2, (8 - 1)) - 1; // 2**(8 - 1)
+    int exponent_number = (int_count - 1) + bias;
 
     i = 8;
-    while(exponent_number != 0 && i >= 1 )
+    for(; i > 0; i--)
     {
-        encoded[i] = ((exponent_number % 2 == 1) ? '1':'0');
+        encoded[i] = ((exponent_number % 2) == 1) ? '1':'0';
         exponent_number = exponent_number / 2;
-        i--;
     }
 
+    // Print
+    i = 1;
     printf("exponent: ");
-    for (int k = 1; k < 9; ++k) {
-        printf("%c",encoded[k]);
-    }
+    for(; i < 9; i++)
+        printf("%c",encoded[i]);
     printf("\n");
 
+    // Put whole number part into fraction section, except the first one
+    // Signed 1, xxxxxxxx (9). yyyyyyyy
+    int current_location = i;
+    j = 1;
+    for (; i < int_count + current_location; i++, j++)
+        encoded[i] = exponent[j];
 
+    // Put Frac into the rest of the section
+    j = 0;
     printf("fraction: ");
-    int skip_first_1 = 0;
-    for (i = int_count-1; i >= 0; --i) {
-        if(tmp1[i]==-1)
-        {
-            continue;
-        }
-        if(skip_first_1==0 && tmp1[i] == 1)
-        {
-            skip_first_1 = 1;
-            continue;
-        }
-        if(tmp1[i]==1)
-        {
-            encoded[fraction_pointer] = '1';
-        }
-        else
-        {
-            encoded[fraction_pointer] = '0';
-        }
-        printf("%d",tmp1[i]);
-        fraction_pointer ++;
+    for (; i < 31; i++, j++) {
+        encoded[i] = fraction[j];
+        printf("%c", fraction[j]);
     }
-
-    for (i = float_count-1; i >= 0 ; --i) {
-        if(tmp2[i]==-1){
-            continue;
-        }
-        if(tmp2[i]==1)
-        {
-            encoded[fraction_pointer] = '1';
-        }
-        else
-        {
-            encoded[fraction_pointer] = '0';
-        }
-        printf("%d",tmp2[i]);
-        fraction_pointer ++;
-    }
-
-    for (;fraction_pointer < 32; ++fraction_pointer) {
-        printf("0");
-        encoded[fraction_pointer] = '0';
-    }
-
     printf("\n");
 
     return;
