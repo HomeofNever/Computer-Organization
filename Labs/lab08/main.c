@@ -290,7 +290,7 @@ int main() {
     char encode[100];
     ieee754encode(57.750000, &encode);
     printf("output: ");
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 32; i++) {
         printf("%c", encode[i]);
     }
 
@@ -416,7 +416,7 @@ void ieee754encode(float value, char *encoded) {
      *  sign: 0
      *  exponent: 10000100
      *  fraction: 11001110000000000000000
-     *  predit: 0 10000110 01110 01110000000000000
+     *  predit: 0 10000100 11001 11000000000000000
      *  output: 0 10000100 11001 110000000000000000
      */
 
@@ -433,7 +433,7 @@ void ieee754encode(float value, char *encoded) {
     char fraction[23]; // 9 - 31
 
     // init with -1, skip unnecessary
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < 8; i++) {
         exponent[i] = -1;
     }
     for (i = 0; i < 22; i++) {
@@ -443,7 +443,7 @@ void ieee754encode(float value, char *encoded) {
     // Convert int to binary
     int int_count = 0, frac_count = 0;
     while (int_part != 0 && int_count < 8) {
-        exponent[7 - int_count] = int_part % 2 ? '1' : '0';
+        exponent[int_count] = int_part % 2 ? '1' : '0';
         int_part /= 2;
         int_count++;
     }
@@ -460,6 +460,7 @@ void ieee754encode(float value, char *encoded) {
     int bias = pow(2, (8 - 1)) - 1; // 2**(8 - 1)
     int exponent_number = (int_count - 1) + bias;
 
+    // Calculating the exponent in reverse way
     i = 8;
     for(; i > 0; i--)
     {
@@ -467,26 +468,27 @@ void ieee754encode(float value, char *encoded) {
         exponent_number = exponent_number / 2;
     }
 
-    // Print
+    // Print inverse exponent
     i = 1;
     printf("exponent: ");
     for(; i < 9; i++)
         printf("%c",encoded[i]);
     printf("\n");
 
-    // Put whole number part into fraction section, except the first one
-    // Signed 1, xxxxxxxx (9). yyyyyyyy
-    j = 1;
-    for (; j < int_count; i++, j++)
-        if (exponent[j] != -1)
-            encoded[i] = exponent[j];
-        else
-            break;
-
-    // Put Frac into the rest of the section
-    j = 0;
+    // Put whole number part into fraction section, except the first bit
+    // Signed 1, xxxxxxxx (8 bits of expo). (rest of the num except the first bit)yyyyy (true frac section) zzzzzzz...
     printf("fraction: ");
-    for (; i < 31; i++, j++) {
+    j = int_count - 1 - 1; // Skip first bit in int binary part
+    for (; j >= 0; j--)
+        if (exponent[j] != -1) {
+          encoded[i] = exponent[j];
+          printf("%c", encoded[i]);
+          i++;
+        }
+
+    // Put true Frac into the rest of the section
+    j = 0;
+    for (; i < 32; i++, j++) {
         if (fraction[j] != -1) {
             encoded[i] = fraction[j];
         } else {
