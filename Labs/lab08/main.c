@@ -359,8 +359,8 @@ BIT multiplexer(BIT I0, BIT I1, BIT I2, BIT I3, BIT S0, BIT S1) {
 void decoder(BIT I0, BIT I1, BIT *O0, BIT *O1, BIT *O2, BIT *O3) {
     /* TO DO: implement a 2-input decoder */
     *O0 = and_gate(not_gate(I0), not_gate(I1));
-    *O1 = and_gate(not_gate(I0), I1);
-    *O2 = and_gate(I0, not_gate(I1));
+    *O1 = and_gate(I0, not_gate(I1));
+    *O2 = and_gate(not_gate(I0), I1);
     *O3 = and_gate(I0, I1);
 
     return;
