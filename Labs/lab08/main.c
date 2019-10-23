@@ -336,16 +336,16 @@ BIT multiplexer(BIT I0, BIT I1, BIT I2, BIT I3, BIT S0, BIT S1) {
                                      not_gate(S1)),
                             I0), // not S0, not S1, I0
                     and_gate(
-                            and_gate(not_gate(S0),
-                                     S1),
-                            I1) // not S0, S1, I1
+                            and_gate(S0,
+                                     not_gate(S1)),
+                            I1) // S0, not S1, I1
             ),
             or_gate(
                     and_gate(
-                            and_gate(S0,
-                                     not_gate(S1)),
+                            and_gate(not_gate(S0),
+                                     S1),
                             I2
-                    ), // S0, not S1, I2
+                    ), // not S0, S1, I2
                     and_gate(
                             and_gate(S0,
                                      S1),
@@ -384,12 +384,12 @@ BIT full_adder_1bit(BIT A, BIT B, BIT CIN, BIT *COUT) {
 BIT alu_1bit(BIT OP0, BIT OP1, BIT CIN, BIT A, BIT B, BIT *COUT) {
     /* TO DO: implement a 1-bit ALU */
     BIT binvert = xor_gate(and_gate(OP0, OP1), B); // Calculate Binvert
-    CIN = or_gate(and_gate(OP0, OP1), CIN); // Set CIN to 1 when sub
+    // CIN = or_gate(and_gate(OP0, OP1), CIN); // Set CIN to 1 when sub
     BIT result = full_adder_1bit(A, binvert, CIN, COUT);
     return multiplexer(
             and_gate(A, B), // 0 0
-            result, // 0 1
-            or_gate(A, B), // 1 0
+            or_gate(A, B), // 0 1
+            result, // 1 0
             result, // 1 1
             OP0,
             OP1);
