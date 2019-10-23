@@ -401,10 +401,10 @@ void alu_4bit(BIT OP0, BIT OP1, BIT A0, BIT A1, BIT A2, BIT A3,
               BIT *C0, BIT *C1, BIT *C2, BIT *C3) {
     /* TO DO: implement a 4-bit ALU */
     BIT COUT = and_gate(OP0, OP1);
-    *C3 = alu_1bit(OP0, OP1, COUT, A3, B3, &COUT);
-    *C2 = alu_1bit(OP0, OP1, COUT, A2, B2, &COUT);
-    *C1 = alu_1bit(OP0, OP1, COUT, A1, B1, &COUT);
     *C0 = alu_1bit(OP0, OP1, COUT, A0, B0, &COUT);
+    *C1 = alu_1bit(OP0, OP1, COUT, A1, B1, &COUT);
+    *C2 = alu_1bit(OP0, OP1, COUT, A2, B2, &COUT);
+    *C3 = alu_1bit(OP0, OP1, COUT, A3, B3, &COUT);
 
     return;
 }
