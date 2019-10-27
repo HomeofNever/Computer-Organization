@@ -73,21 +73,14 @@ int isPowerOf2(int num) {
 }
 
 int findPowers(int x, int *powers) {
-  // Allocate memory
-  powers = malloc(100 * sizeof(int));
-
   int size = 0;
   while (x > 0) {
-    powers[size++] = x % 2;
+    powers[size] = x % 2;
     x = x / 2;
+    size++;
   }
 
-  if (x == 0) {
-    // Return the size of array
-    return size;
-  } else {
-    return 0;
-  }
+  return size;
 }
 
 void printRecord(struct Record r) {
@@ -200,11 +193,11 @@ void stageNMapper(int stage, struct Record *current_var1, struct Record *current
 }
 
 // Register var if does not appear in the s list
-void register_var(int *alphabet, const char current, int *s_register) {
+void register_var(const char current) {
   int num = alphabet2num(current);
   if (alphabet[num] == UNREG) {
-    alphabet[num] = *s_register;
-    (*s_register)++;
+    alphabet[num] = s_register;
+    s_register++;
   }
 }
 
@@ -225,6 +218,16 @@ unsigned long read_all_digits(const char *line, unsigned long *i, unsigned long 
   }
 
   return atoi(digits);
+}
+
+int check_t_register() {
+  // We need to check if the t register has used up
+  if (t_register > MAX_T_REG) {
+    t_register = 0;
+    return 1; // Reset
+  }
+
+  return 0;
 }
 
 void load_val(struct Record * current_var1, struct Record * assignee, struct Line *mips) {
@@ -291,6 +294,117 @@ struct Record minus(struct Record * current_var1, struct Record * current_var2, 
 }
 
 struct Record multiple(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
+  // There are two types of condition: (s * s) or (s * num)
+  if (current_var2->type != REG_NUM) {
+    // mult $s0,$s0
+    // mflo $t0
+    mips[mips_line].operation = SYB_MULT;
+    mips[mips_line].first = *current_var1;
+    mips[mips_line].second = *current_var2;
+    mips_line++;
+    mips[mips_line].operation = SYB_MFLO;
+    struct Record temp = {.type = REG_T, .data=t_register};
+    mips[mips_line].first = temp;
+    t_register++;
+    mips_line++;
+    return temp;
+  } else {
+    int num = current_var2->data;
+    if (num < 0) {
+      num = 0 - num; // Make it positive for calculation
+    }
+    // Allocate memory
+    int power[100];
+    int length = findPowers(num, power);
+    // Init
+    int flag = 0;
+    int current_reg = t_register;
+    int current_reg_next;
+    // Avoid Overflow
+    if (check_t_register() == 1) {
+      current_reg_next = t_register;
+    } else {
+      current_reg_next = current_reg + 1;
+    }
+    for (; length > 0; length--) {
+      if (power[length] == 1) {
+        // SLL
+        mips[mips_line].operation = SYB_SLL;
+        mips[mips_line].first.data = current_reg;
+        mips[mips_line].first.type = REG_T;
+        mips[mips_line].second = *current_var1;
+        mips[mips_line].third.data = length;
+        mips[mips_line].third.type = REG_NUM;
+        mips_line++;
+        if (flag == 0) {
+          // This is the first args
+          // MOVE
+          mips[mips_line].operation = SYB_MOVE;
+          mips[mips_line].first.data = current_reg_next;
+          mips[mips_line].first.type = REG_T;
+          mips[mips_line].second.data = current_reg;
+          mips[mips_line].second.type = REG_T;
+          mips_line++;
+          // Set flag
+          flag = 1;
+        } else {
+          // Add
+          mips[mips_line].operation = OP_PLUS;
+          mips[mips_line].first.data = current_reg_next;
+          mips[mips_line].first.type = REG_T;
+          mips[mips_line].second.data = current_reg_next;
+          mips[mips_line].second.type = REG_T;
+          mips[mips_line].third.data = current_reg;
+          mips[mips_line].third.type = REG_T;
+          mips_line++;
+        }
+      }
+    } // End of Loop
+
+    // Here we have multiple of 1 (if exist)
+    // add $t1,$t1,$s0
+    if (power[0] == 1) {
+      mips[mips_line].operation = OP_PLUS;
+      mips[mips_line].first.data = current_reg_next;
+      mips[mips_line].first.type = REG_T;
+      mips[mips_line].second.data = current_reg_next;
+      mips[mips_line].second.type = REG_T;
+      mips[mips_line].third = *current_var1;
+      mips_line++;
+    }
+
+    // Dealing with Result
+    struct Record result = {.type=REG_T, .data=current_reg}; // We use the first temp as result
+    if (current_var2->data < 0) {
+      // Negative value
+      // Replace with sub
+      // sub $s1,$zero,$t1
+
+    } else {
+      // Move Result
+      // move $s1,$t1
+      mips[mips_line].operation = SYB_MOVE;
+      mips[mips_line].first = result;
+      mips[mips_line].second.data = current_reg_next;
+      mips[mips_line].second.type = REG_T;
+      }
+    }
+}
+
+struct Record divided(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
+  mips[mips_line].operation = '+';
+  mips[mips_line].second = *current_var1;
+  mips[mips_line].third = *current_var2;
+  mips[mips_line].first.type = REG_T;
+  mips[mips_line].first.data = t_register;
+  // Since we have assigned T, we will always switch var 1 to our t register
+  struct Record ct = {.type = REG_T, .data=t_register};
+  t_register++;
+  mips_line++;
+  return ct;
+}
+
+struct Record mod(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
   mips[mips_line].operation = '+';
   mips[mips_line].second = *current_var1;
   mips[mips_line].third = *current_var2;
@@ -356,7 +470,7 @@ int main(int argc, char *argv[]) {
         continue;
       } else if (islower(c)) {
         if (stage == 0 || stage == 2) {
-          register_var(alphabet, c, &s_register);
+          register_var(c);
           stageSMapper(stage, &current_var1, &current_var2, alphabet[alphabet2num(c)]);
           stage++;
         } else {
@@ -400,10 +514,7 @@ int main(int argc, char *argv[]) {
 
       // Begin parsing line
       if (stage == 3) {
-        // We need to check if the t register has used up
-        if (t_register > MAX_T_REG) {
-          t_register = 0;
-        }
+        check_t_register();
         if (current_op == OP_PLUS) {
           // Reassign next var
           current_var1 = add(&current_var1, &current_var2, mips);
@@ -412,11 +523,14 @@ int main(int argc, char *argv[]) {
           current_var1 = minus(&current_var1, &current_var2, mips);
           stage = 1;
         } else if (current_op == OP_TIMES) {
-
+          current_var1 = multiple(&current_var1, &current_var2, mips);
+          stage = 1;
         } else if (current_op == OP_DIVIDED) {
-
+          current_var1 = divided(&current_var1, &current_var2, mips);
+          stage = 1;
         } else if (current_op == OP_MOD) {
-
+          current_var1 = mod(&current_var1, &current_var2, mips);
+          stage = 1;
         } else {
           fprintf(stderr, "Unrecognized OP...\n");
         }
