@@ -20,6 +20,10 @@
 #define SYB_MOVE 'v'
 #define SYB_SLL 's'
 #define SYB_LI 'i'
+#define SYB_SRL 'r'
+#define SYB_BLTZ 't'
+#define SYB_J 'j'
+#define SYB_BLOCK 'b'
 // Registers
 #define REG_NUM 0
 #define REG_T 1
@@ -38,6 +42,7 @@ int s_register = 0;
 int t_register = 0;
 int mips_line = 0;
 int alphabet[26];
+int label = 0;
 
 // A record is a number - immediate value(int), a $s register(for vars), or a $t register(for temp).
 struct Record {
@@ -104,56 +109,82 @@ void printRecord(struct Record r) {
 
 void printLine(struct Line l) {
   // Operation
-  if (l.operation == OP_PLUS) {
-    if (l.third.type == REG_NUM) {
-      printf("addi ");
-    } else {
-      printf("add  ");
-    }
-  } else if (l.operation == OP_MINUS) {
-    if (l.third.type == REG_NUM) {
-      printf("addi ");
-    } else {
-      printf("sub  ");
-    }
-  } else if (l.operation == SYB_MULT) {
-    printf("mult ");
-  } else if (l.operation == SYB_DIV) {
-    printf("div ");
-  } else if (l.operation == SYB_MOVE) {
-    printf("move ");
-  } else if (l.operation == SYB_MFLO) {
-    printf("mflo ");
-  } else if (l.operation == SYB_SLL) {
-    printf("sll ");
-  } else if (l.operation == SYB_LI) {
-    printf("li ");
-  } else {
+  switch(l.operation) {
+    case OP_PLUS:
+      if (l.third.type == REG_NUM) {
+        printf("addi ");
+      } else {
+        printf("add  ");
+      }
+      break;
+    case OP_MINUS:
+      if (l.third.type == REG_NUM) {
+        printf("addi ");
+      } else {
+        printf("sub  ");
+      }
+      break;
+    case SYB_MULT:
+      printf("mult ");
+      break;
+    case SYB_DIV:
+      printf("div ");
+      break;
+    case SYB_MOVE:
+      printf("move ");
+      break;
+    case SYB_MFLO:
+      printf("mflo ");
+      break;
+    case SYB_SLL:
+      printf("sll ");
+      break;
+    case SYB_LI:
+      printf("li ");
+      break;
+    case SYB_J:
+      printf("j ");
+      break;
+    case SYB_SRL:
+      printf("srl ");
+      break;
+    case SYB_BLTZ:
+      printf("bltz ");
+      break;
+    case SYB_BLOCK:
+      // Do Nothing
+      break;
+    default:
       fprintf(stderr, "Unrecognized Operation type: does something goes wrong?\n");
   }
 
   // Vars
   printRecord(l.first);
-  if (l.operation == OP_PLUS ||
-      l.operation == OP_MINUS ||
-      l.operation == SYB_MOVE ||
-      l.operation == SYB_SLL
-      ) {
-    printf(",");
-    printRecord(l.second);
-    printf(",");
-    if (l.third.type == REG_NUM && l.operation == OP_MINUS) {
-      // Add minus when minus operation and it is an immediate value
-      printf("-");
-    }
-    printRecord(l.third);
-  } else if (l.operation == SYB_MULT ||
-             l.operation == SYB_DIV ||
-             l.operation == SYB_LI) {
-    printf(",");
-    printRecord(l.second);
-  } else if (l.operation == SYB_MFLO) {
-    // Do nothing
+  switch (l.operation) {
+    case OP_PLUS:
+    case OP_MINUS:
+    case SYB_MOVE:
+    case SYB_SLL:
+      printf(",");
+      printRecord(l.second);
+      printf(",");
+      if (l.third.type == REG_NUM && l.operation == OP_MINUS) {
+        // Add minus when minus operation and it is an immediate value
+        printf("-");
+      }
+      printRecord(l.third);
+      break;
+    case SYB_MULT:
+    case SYB_DIV:
+    case SYB_LI:
+      printf(",");
+      printRecord(l.second);
+      break;
+    case SYB_MFLO:
+    case SYB_J:
+    case SYB_BLOCK:
+      // Do Nothing
+      break;
   }
   printf("\n");
 }
@@ -310,9 +341,61 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     return temp;
   } else {
     int num = current_var2->data;
+    // Special Cases
+    // If 0
+    if (num == 0) {
+      // Allocate a temp
+      struct Record result = {.type=REG_T, .data=t_register};
+      t_register++;
+      load_val(current_var2, &result, mips);
+      return result;
+    }
+
+    // If 1
+    if (num == 1) {
+      // Allocate a temp
+      struct Record result = {.type=REG_T, .data=t_register};
+      t_register++;
+      mips[mips_line].operation = SYB_MOVE;
+      mips[mips_line].first = result;
+      mips[mips_line].second = *current_var1;
+      mips_line++;
+      // Allocate another temp
+      struct Record result1 = {.type=REG_T, .data=t_register};
+      t_register++;
+      mips[mips_line].operation = SYB_MOVE;
+      mips[mips_line].first = result1;
+      mips[mips_line].second = result;
+      mips_line++;
+      return result1;
+    }
+
+    // If -1
+    if (num == -1) {
+      // Allocate a temp
+      struct Record result = {.type=REG_T, .data=t_register};
+      t_register++;
+      mips[mips_line].operation = SYB_MOVE;
+      mips[mips_line].first = result;
+      mips[mips_line].second = *current_var1;
+      mips_line++;
+      // Allocate another temp
+      struct Record result1 = {.type=REG_T, .data=t_register};
+      t_register++;
+      mips[mips_line].operation = OP_MINUS;
+      mips[mips_line].first = result1;
+      mips[mips_line].second.data = -1;
+      mips[mips_line].second.type = REG_ZERO;
+      mips[mips_line].third = result;
+      mips_line++;
+      return result1;
+    }
+
+    // Init Num
     if (num < 0) {
       num = 0 - num; // Make it positive for calculation
     }
+
     // Allocate memory
     int power[100];
     int length = findPowers(num, power);
@@ -320,12 +403,15 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     int flag = 0;
     int current_reg = t_register;
     int current_reg_next;
+
     // Avoid Overflow
     if (check_t_register() == 1) {
       current_reg_next = t_register;
     } else {
       current_reg_next = current_reg + 1;
     }
+
+
     for (; length > 0; length--) {
       if (power[length] == 1) {
         // SLL
@@ -379,7 +465,13 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
       // Negative value
       // Replace with sub
       // sub $s1,$zero,$t1
-
+      mips[mips_line].operation = OP_MINUS;
+      mips[mips_line].first.data = current_reg_next;
+      mips[mips_line].first.type = REG_T;
+      mips[mips_line].second.data = -1;
+      mips[mips_line].second.type = REG_ZERO;
+      mips[mips_line].third = result;
+      mips_line++;
     } else {
       // Move Result
       // move $s1,$t1
@@ -387,6 +479,7 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
       mips[mips_line].first = result;
       mips[mips_line].second.data = current_reg_next;
       mips[mips_line].second.type = REG_T;
+      mips_line++;
       }
     }
 }
