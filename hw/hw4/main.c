@@ -413,12 +413,14 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
       current_reg_next = current_reg + 1;
     }
 
+    struct Record current_reg_rec = {.type=REG_T, .data=current_reg};
+    struct Record current_reg_next_rec = {.type=REG_T, .data=current_reg_next};
+
     for (; length > 0; length--) {
       if (power[length] == 1) {
         // SLL
         mips[mips_line].operation = SYB_SLL;
-        mips[mips_line].first.data = current_reg;
-        mips[mips_line].first.type = REG_T;
+        mips[mips_line].first = current_reg_rec;
         mips[mips_line].second = *current_var1;
         mips[mips_line].third.data = length;
         mips[mips_line].third.type = REG_NUM;
@@ -427,22 +429,17 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
           // This is the first args
           // MOVE
           mips[mips_line].operation = SYB_MOVE;
-          mips[mips_line].first.data = current_reg_next;
-          mips[mips_line].first.type = REG_T;
-          mips[mips_line].second.data = current_reg;
-          mips[mips_line].second.type = REG_T;
+          mips[mips_line].first = current_reg_next_rec;
+          mips[mips_line].second = current_reg_rec;
           mips_line++;
           // Set flag
           flag = 1;
         } else {
           // Add
           mips[mips_line].operation = OP_PLUS;
-          mips[mips_line].first.data = current_reg_next;
-          mips[mips_line].first.type = REG_T;
-          mips[mips_line].second.data = current_reg_next;
-          mips[mips_line].second.type = REG_T;
-          mips[mips_line].third.data = current_reg;
-          mips[mips_line].third.type = REG_T;
+          mips[mips_line].first = current_reg_next_rec;
+          mips[mips_line].second = current_reg_next_rec;
+          mips[mips_line].third = current_reg_rec;
           mips_line++;
         }
       }
@@ -452,37 +449,34 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     // add $t1,$t1,$s0
     if (power[0] == 1) {
       mips[mips_line].operation = OP_PLUS;
-      mips[mips_line].first.data = current_reg_next;
-      mips[mips_line].first.type = REG_T;
-      mips[mips_line].second.data = current_reg_next;
-      mips[mips_line].second.type = REG_T;
+      mips[mips_line].first = current_reg_next_rec;
+      mips[mips_line].second = current_reg_next_rec;
       mips[mips_line].third = *current_var1;
       mips_line++;
     }
 
     // Dealing with Result
-    struct Record result = {.type=REG_T, .data=current_reg}; // We use the first temp as result
+    // We use the first current_reg as result
     if (current_var2->data < 0) {
       // Negative value
       // Replace with sub
       // sub $s1,$zero,$t1
       mips[mips_line].operation = OP_MINUS;
-      mips[mips_line].first.data = current_reg_next;
-      mips[mips_line].first.type = REG_T;
+      mips[mips_line].first = current_reg_rec;
       mips[mips_line].second.data = -1;
       mips[mips_line].second.type = REG_ZERO;
-      mips[mips_line].third = result;
+      mips[mips_line].third = current_reg_next_rec;
       mips_line++;
     } else {
       // Move Result
       // move $s1,$t1
       mips[mips_line].operation = SYB_MOVE;
-      mips[mips_line].first = result;
-      mips[mips_line].second.data = current_reg_next;
-      mips[mips_line].second.type = REG_T;
+      mips[mips_line].first = current_reg_rec;
+      mips[mips_line].second = current_reg_next_rec;
       mips_line++;
-      }
     }
+    return current_reg_rec;
+  }
 }
 
 struct Record divided(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
