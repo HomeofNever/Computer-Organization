@@ -15,6 +15,7 @@
 #define OP_EQ '='
 // Symbols
 #define SYB_MFLO 'l'
+#define SYB_MFHI 'h'
 #define SYB_DIV 'd'
 #define SYB_MULT 'm'
 #define SYB_MOVE 'v'
@@ -70,6 +71,10 @@ int isPowerOf2(int num) {
   }
 
   int count = 0;
+  // Always positive
+  if (num < 0) {
+    num = 0 - num;
+  }
   while (num != 1) {
     num = num / 2;
     count++;
@@ -79,6 +84,10 @@ int isPowerOf2(int num) {
 
 int findPowers(int x, int *powers) {
   int size = 0;
+  // Always positive
+  if (x < 0) {
+    x = 0 - x;
+  }
   while (x > 0) {
     powers[size] = x % 2;
     x = x / 2;
@@ -117,14 +126,14 @@ void printLine(struct Line l) {
       if (l.third.type == REG_NUM) {
         printf("addi ");
       } else {
-        printf("add  ");
+        printf("add ");
       }
       break;
     case OP_MINUS:
       if (l.third.type == REG_NUM) {
         printf("addi ");
       } else {
-        printf("sub  ");
+        printf("sub ");
       }
       break;
     case SYB_MULT:
@@ -154,6 +163,8 @@ void printLine(struct Line l) {
     case SYB_BLTZ:
       printf("bltz ");
       break;
+    case SYB_MFHI:
+      printf("mfhi ");
     case SYB_BLOCK:
       // Do Nothing
       break;
@@ -189,6 +200,7 @@ void printLine(struct Line l) {
       printf(":");
       break;
     case SYB_MFLO:
+    case SYB_MFHI:
     case SYB_J:
       // Do Nothing
       break;
@@ -501,8 +513,8 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
       // Allocate a temp
       struct Record result = {.type=REG_T, .data=t_register};
       mips[mips_line].operation = SYB_MOVE;
-      mips[mips_line].first = *current_var1;
-      mips[mips_line].second = result;
+      mips[mips_line].first = result;
+      mips[mips_line].second = *current_var1;
       mips_line++;
       t_register++;
       return result;
@@ -567,6 +579,15 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
       mips[mips_line].third.data = times;
       mips[mips_line].third.type = REG_NUM;
       mips_line++;
+      // Negative: sub by zero
+      if (num < 0) {
+        mips[mips_line].operation = OP_MINUS;
+        mips[mips_line].first = tmp2;
+        mips[mips_line].second.data = -1;
+        mips[mips_line].second.type = REG_ZERO;
+        mips[mips_line].third = tmp2;
+        mips_line++;
+      }
       // j L1
       mips[mips_line].operation = SYB_J;
       mips[mips_line].first.type = SYB_BLOCK;
@@ -602,9 +623,19 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
 }
 
 struct Record mod(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
-  fprintf(stderr, "Not Implemented...");
-  struct Record tmp = {};
-  return tmp;
+  // Mod will always between two register
+  // div $t0,$s1
+  // mflo $s2
+  mips[mips_line].operation = SYB_DIV;
+  mips[mips_line].first = *current_var1;
+  mips[mips_line].second = *current_var2;
+  mips_line++;
+  mips[mips_line].operation = SYB_MFHI;
+  struct Record temp = {.type = REG_T, .data=t_register};
+  mips[mips_line].first = temp;
+  t_register++;
+  mips_line++;
+  return temp;
 }
 
 int main(int argc, char *argv[]) {
@@ -636,7 +667,7 @@ int main(int argc, char *argv[]) {
     unsigned long strLen = strlen(line);
     // The last one should be an ENDLINE
     if (line[strLen - 1] != ENDLINE) {
-      fprintf(stderr, "Parsing error...\n");
+      fprintf(stderr, "Parsing error: expecting endline but find '%c'", line[strLen - 1]);
       return EXIT_FAILURE;
     }
 
@@ -658,13 +689,35 @@ int main(int argc, char *argv[]) {
         stage = 4;
       } else if (isspace(c)) {
         continue;
+      } else if (c == OP_MINUS) {
+        // Special: negative number
+        if (isdigit(line[i + 1])) {
+          if (stage == 0 || stage == 2) {
+            i++; // Increase one
+            unsigned long num = read_all_digits(line, &i, strLen);
+            stageNMapper(stage, &current_var1, &current_var2, 0 - num);
+            stage++;
+          } else {
+            fprintf(stderr, "Parsing error...1\n");
+            return EXIT_FAILURE;
+          }
+        } else {
+          // Normal minus symbol
+          if (stage == 1) {
+            current_op = c;
+            stage++;
+          } else {
+            fprintf(stderr, "Parsing error...?\n");
+            return EXIT_FAILURE;
+          }
+        }
       } else if (islower(c)) {
         if (stage == 0 || stage == 2) {
           register_var(c);
           stageSMapper(stage, &current_var1, &current_var2, alphabet[alphabet2num(c)]);
           stage++;
         } else {
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...2\n");
           return EXIT_FAILURE;
         }
       } else if (isdigit(c)) {
@@ -673,7 +726,7 @@ int main(int argc, char *argv[]) {
           stageNMapper(stage, &current_var1, &current_var2, num);
           stage++;
         } else {
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...3\n");
           return EXIT_FAILURE;
         }
       } else if (c == OP_EQ) {
@@ -682,11 +735,10 @@ int main(int argc, char *argv[]) {
           assignee = current_var1;
         } else {
           // Wait! LHS should have only one var, right?
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...4\n");
           return EXIT_FAILURE;
         }
-      } else if (c == OP_MINUS ||
-                 c == OP_PLUS ||
+      } else if (c == OP_PLUS ||
                  c == OP_TIMES ||
                  c == OP_DIVIDED ||
                  c == OP_MOD ) {
@@ -694,11 +746,11 @@ int main(int argc, char *argv[]) {
           current_op = c;
           stage++;
         } else {
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...5\n");
           return EXIT_FAILURE;
         }
       } else {
-        fprintf(stderr, "Parsing error...\n");
+        fprintf(stderr, "Parsing error...6\n");
         return EXIT_FAILURE;
       }  // End of registering vars
 
@@ -731,13 +783,20 @@ int main(int argc, char *argv[]) {
         } else {
           // Nice! Here should be the end of expression, and let's wrap things up!
           // Assign var to assignee, change the last line of the Line Seq
-          // For special case Division, we need to chang two place
+          // For special case Division, we need to change some places
           if (mips[mips_line - 1].operation == SYB_BLOCK) {
             mips[mips_line - 2].first = assignee; // mflo
-            mips[mips_line - 7].first = assignee; // srl
+            mips[mips_line - 7].first = assignee; // srl/sub
+            // Negative: we need to change different line
+            if (mips[mips_line - 7].operation == OP_MINUS) {
+              mips[mips_line - 7].third = assignee; // sub
+              mips[mips_line - 8].first = assignee; // srl
+            }
           } else {
             mips[mips_line - 1].first = assignee;
           }
+          // We also need to return unused t_register
+          t_register--;
         }
       }
     }
