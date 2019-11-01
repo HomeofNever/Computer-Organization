@@ -100,7 +100,7 @@ int findPowers(int x, int *powers) {
 void printRecord(struct Record r) {
   switch(r.type) {
     case REG_NUM:
-      printf("%d", r.data);
+        printf("%d", r.data);
       break;
     case REG_S:
       printf("$%c%d", 's', r.data);
@@ -175,17 +175,27 @@ void printLine(struct Line l) {
   // Vars
   printRecord(l.first);
   switch (l.operation) {
-    case OP_PLUS:
     case OP_MINUS:
+      printf(",");
+      printRecord(l.second);
+      printf(",");
+      if (l.third.type == REG_NUM) {
+        if (l.third.data < 0) {
+          printf("%d", 0 - l.third.data);
+        } else {
+          printf("-");
+          printRecord(l.third);
+        }
+      } else {
+        printRecord(l.third);
+      }
+      break;
+    case OP_PLUS:
     case SYB_SLL:
     case SYB_SRL:
       printf(",");
       printRecord(l.second);
       printf(",");
-      if (l.third.type == REG_NUM && l.operation == OP_MINUS) {
-        // Add minus when minus operation and it is an immediate value
-        printf("-");
-      }
       printRecord(l.third);
       break;
     case SYB_MULT:
@@ -600,15 +610,31 @@ struct Record mod(struct Record * current_var1, struct Record * current_var2, st
   // Mod will always between two register
   // div $t0,$s1
   // mflo $s2
-  mips[mips_line].operation = SYB_DIV;
-  mips[mips_line].first = *current_var1;
-  mips[mips_line].second = *current_var2;
-  mips_line++;
-  mips[mips_line].operation = SYB_MFHI;
-  struct Record temp = build_t_register();
-  mips[mips_line].first = temp;
-  mips_line++;
-  return temp;
+  if (current_var2->type != REG_NUM) {
+    mips[mips_line].operation = SYB_DIV;
+    mips[mips_line].first = *current_var1;
+    mips[mips_line].second = *current_var2;
+    mips_line++;
+    mips[mips_line].operation = SYB_MFHI;
+    struct Record temp = build_t_register();
+    mips[mips_line].first = temp;
+    mips_line++;
+
+    return temp;
+  } else {
+    struct Record temp = build_t_register();
+    load_val(current_var2, &temp, mips);
+    mips[mips_line].operation = SYB_DIV;
+    mips[mips_line].first = *current_var1;
+    mips[mips_line].second = temp;
+    mips_line++;
+    mips[mips_line].operation = SYB_MFHI;
+    struct Record temp1 = build_t_register();
+    mips[mips_line].first = temp1;
+    mips_line++;
+
+    return temp1;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -626,9 +652,6 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 26; i++) {
     alphabet[i] = UNREG;
   }
-  // Init registers
-  t_register = 0;
-  s_register = 0;
 
   // Begin Line Iteration
   while (fgets(line, 255, (FILE *) fp) != NULL) {
