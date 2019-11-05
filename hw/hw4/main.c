@@ -15,6 +15,7 @@
 #define OP_EQ '='
 // Symbols
 #define SYB_MFLO 'l'
+#define SYB_MFHI 'h'
 #define SYB_DIV 'd'
 #define SYB_MULT 'm'
 #define SYB_MOVE 'v'
@@ -70,6 +71,10 @@ int isPowerOf2(int num) {
   }
 
   int count = 0;
+  // Always positive
+  if (num < 0) {
+    num = 0 - num;
+  }
   while (num != 1) {
     num = num / 2;
     count++;
@@ -79,6 +84,10 @@ int isPowerOf2(int num) {
 
 int findPowers(int x, int *powers) {
   int size = 0;
+  // Always positive
+  if (x < 0) {
+    x = 0 - x;
+  }
   while (x > 0) {
     powers[size] = x % 2;
     x = x / 2;
@@ -91,7 +100,7 @@ int findPowers(int x, int *powers) {
 void printRecord(struct Record r) {
   switch(r.type) {
     case REG_NUM:
-      printf("%d", r.data);
+        printf("%d", r.data);
       break;
     case REG_S:
       printf("$%c%d", 's', r.data);
@@ -117,14 +126,14 @@ void printLine(struct Line l) {
       if (l.third.type == REG_NUM) {
         printf("addi ");
       } else {
-        printf("add  ");
+        printf("add ");
       }
       break;
     case OP_MINUS:
       if (l.third.type == REG_NUM) {
         printf("addi ");
       } else {
-        printf("sub  ");
+        printf("sub ");
       }
       break;
     case SYB_MULT:
@@ -154,6 +163,8 @@ void printLine(struct Line l) {
     case SYB_BLTZ:
       printf("bltz ");
       break;
+    case SYB_MFHI:
+      printf("mfhi ");
     case SYB_BLOCK:
       // Do Nothing
       break;
@@ -164,17 +175,27 @@ void printLine(struct Line l) {
   // Vars
   printRecord(l.first);
   switch (l.operation) {
-    case OP_PLUS:
     case OP_MINUS:
+      printf(",");
+      printRecord(l.second);
+      printf(",");
+      if (l.third.type == REG_NUM) {
+        if (l.third.data < 0) {
+          printf("%d", 0 - l.third.data);
+        } else {
+          printf("-");
+          printRecord(l.third);
+        }
+      } else {
+        printRecord(l.third);
+      }
+      break;
+    case OP_PLUS:
     case SYB_SLL:
     case SYB_SRL:
       printf(",");
       printRecord(l.second);
       printf(",");
-      if (l.third.type == REG_NUM && l.operation == OP_MINUS) {
-        // Add minus when minus operation and it is an immediate value
-        printf("-");
-      }
       printRecord(l.third);
       break;
     case SYB_MULT:
@@ -189,6 +210,7 @@ void printLine(struct Line l) {
       printf(":");
       break;
     case SYB_MFLO:
+    case SYB_MFHI:
     case SYB_J:
       // Do Nothing
       break;
@@ -258,14 +280,19 @@ unsigned long read_all_digits(const char *line, unsigned long *i, unsigned long 
   return atoi(digits);
 }
 
-int check_t_register() {
-  // We need to check if the t register has used up
-  if (t_register > MAX_T_REG) {
-    t_register = 0;
-    return 1; // Reset
-  }
+int get_t_register() {
+  int current = t_register;
+  t_register++;
+  return current % 10;
+}
 
-  return 0;
+struct Record build_t_register() {
+  struct Record r = {.data=get_t_register(), .type=REG_T};
+  return r;
+}
+
+void decrease_t_register() {
+  t_register--;
 }
 
 void load_val(struct Record * current_var1, struct Record * assignee, struct Line *mips) {
@@ -283,24 +310,21 @@ struct Record add(struct Record * current_var1, struct Record * current_var2, st
     mips[mips_line].second.type = REG_ZERO;
     mips[mips_line].second.data = REG_ZERO;
     mips[mips_line].third = *current_var1;
-    mips[mips_line].first.type = REG_T;
-    mips[mips_line].first.data = t_register;
+    struct Record r = build_t_register();
+    mips[mips_line].first = r;
     current_var1->type = REG_T;
-    current_var1->data = t_register;
-    t_register++;
+    current_var1->data = r.data;
     mips_line++;
   }
 
-  mips[mips_line].operation = '+';
+  mips[mips_line].operation = OP_PLUS;
   mips[mips_line].second = *current_var1;
   mips[mips_line].third = *current_var2;
-  mips[mips_line].first.type = REG_T;
-  mips[mips_line].first.data = t_register;
-  // Since we have assigned T, we will always switch var 1 to our t register
-  struct Record ct = {.type = REG_T, .data=t_register};
-  t_register++;
+  struct Record r = build_t_register();
+  mips[mips_line].first = r;
   mips_line++;
-  return ct;
+  // Since we have assigned T, we will always switch var 1 to our t register
+  return r;
 }
 
 struct Record minus(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
@@ -311,24 +335,21 @@ struct Record minus(struct Record * current_var1, struct Record * current_var2, 
     mips[mips_line].second.type = REG_ZERO;
     mips[mips_line].second.data = REG_ZERO;
     mips[mips_line].third = *current_var1;
-    mips[mips_line].first.type = REG_T;
-    mips[mips_line].first.data = t_register;
+    struct Record r = build_t_register();
+    mips[mips_line].first = r;
     current_var1->type = REG_T;
-    current_var1->data = t_register;
-    t_register++;
+    current_var1->data = r.data;
     mips_line++;
   }
 
-  mips[mips_line].operation = '-';
+  mips[mips_line].operation = OP_MINUS;
   mips[mips_line].second = *current_var1;
   mips[mips_line].third = *current_var2;
-  mips[mips_line].first.type = REG_T;
-  mips[mips_line].first.data = t_register;
-  // Since we have assigned T, we will always switch var 1 to our t register
-  struct Record ct = {.type = REG_T, .data=t_register};
-  t_register++;
+  struct Record r = build_t_register();
+  mips[mips_line].first = r;
   mips_line++;
-  return ct;
+  // Since we have assigned T, we will always switch var 1 to our t register
+  return r;
 }
 
 struct Record multiple(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
@@ -341,9 +362,8 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     mips[mips_line].second = *current_var2;
     mips_line++;
     mips[mips_line].operation = SYB_MFLO;
-    struct Record temp = {.type = REG_T, .data=t_register};
+    struct Record temp =build_t_register();
     mips[mips_line].first = temp;
-    t_register++;
     mips_line++;
     return temp;
   } else {
@@ -352,8 +372,7 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     // If 0
     if (num == 0) {
       // Allocate a temp
-      struct Record result = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record result = build_t_register();
       load_val(current_var2, &result, mips);
       return result;
     }
@@ -361,15 +380,13 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     // If 1
     if (num == 1) {
       // Allocate a temp
-      struct Record result = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record result = build_t_register();
       mips[mips_line].operation = SYB_MOVE;
       mips[mips_line].first = result;
       mips[mips_line].second = *current_var1;
       mips_line++;
       // Allocate another temp
-      struct Record result1 = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record result1 = build_t_register();
       mips[mips_line].operation = SYB_MOVE;
       mips[mips_line].first = result1;
       mips[mips_line].second = result;
@@ -380,15 +397,13 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     // If -1
     if (num == -1) {
       // Allocate a temp
-      struct Record result = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record result = build_t_register();
       mips[mips_line].operation = SYB_MOVE;
       mips[mips_line].first = result;
       mips[mips_line].second = *current_var1;
       mips_line++;
       // Allocate another temp
-      struct Record result1 = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record result1 = build_t_register();
       mips[mips_line].operation = OP_MINUS;
       mips[mips_line].first = result1;
       mips[mips_line].second.data = -1;
@@ -403,18 +418,8 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     int length = findPowers(num, power);
     // Init
     int flag = 0;
-    int current_reg = t_register;
-    int current_reg_next;
-
-    // Avoid Overflow
-    if (check_t_register() == 1) {
-      current_reg_next = t_register;
-    } else {
-      current_reg_next = current_reg + 1;
-    }
-
-    struct Record current_reg_rec = {.type=REG_T, .data=current_reg};
-    struct Record current_reg_next_rec = {.type=REG_T, .data=current_reg_next};
+    struct Record current_reg_rec = build_t_register();
+    struct Record current_reg_next_rec = build_t_register();
 
     for (; length > 0; length--) {
       if (power[length] == 1) {
@@ -456,13 +461,13 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
     }
 
     // Dealing with Result
-    // We use the first current_reg as result
+    struct Record result = build_t_register();
     if (current_var2->data < 0) {
       // Negative value
       // Replace with sub
       // sub $s1,$zero,$t1
       mips[mips_line].operation = OP_MINUS;
-      mips[mips_line].first = current_reg_rec;
+      mips[mips_line].first = result;
       mips[mips_line].second.data = -1;
       mips[mips_line].second.type = REG_ZERO;
       mips[mips_line].third = current_reg_next_rec;
@@ -471,11 +476,11 @@ struct Record multiple(struct Record * current_var1, struct Record * current_var
       // Move Result
       // move $s1,$t1
       mips[mips_line].operation = SYB_MOVE;
-      mips[mips_line].first = current_reg_rec;
+      mips[mips_line].first = result;
       mips[mips_line].second = current_reg_next_rec;
       mips_line++;
     }
-    return current_reg_rec;
+    return result;
   }
 }
 
@@ -488,9 +493,8 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
     mips[mips_line].second = *current_var2;
     mips_line++;
     mips[mips_line].operation = SYB_MFLO;
-    struct Record temp = {.type = REG_T, .data=t_register};
+    struct Record temp = build_t_register();
     mips[mips_line].first = temp;
-    t_register++;
     mips_line++;
     return temp;
   } else {
@@ -499,25 +503,23 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
     if (num == 1) {
       // move $s1,$s0
       // Allocate a temp
-      struct Record result = {.type=REG_T, .data=t_register};
+      struct Record result = build_t_register();
       mips[mips_line].operation = SYB_MOVE;
-      mips[mips_line].first = *current_var1;
-      mips[mips_line].second = result;
+      mips[mips_line].first = result;
+      mips[mips_line].second = *current_var1;
       mips_line++;
-      t_register++;
       return result;
     }
 
     if (num == -1) {
       // sub $s1,$zero,$s0
-      struct Record result = {.type=REG_T, .data=t_register};
+      struct Record result = build_t_register();
       mips[mips_line].operation = OP_MINUS;
       mips[mips_line].first = result;
       mips[mips_line].second.data = -1;
       mips[mips_line].second.type = REG_ZERO;
       mips[mips_line].third = *current_var1;
       mips_line++;
-      t_register++;
       return result;
     }
 
@@ -526,8 +528,7 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
     if (times == -1) {
       // No the power of 2
       // li $t0,-31
-      struct Record tmp = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record tmp = build_t_register();
       load_val(current_var2, &tmp, mips);
       // div $s0,$t0
       mips[mips_line].operation = SYB_DIV;
@@ -536,20 +537,15 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
       mips_line++;
       // mflo $s1
       mips[mips_line].operation = SYB_MFLO;
-      check_t_register();
-      struct Record tmp1 = {.type=REG_T, .data=t_register};
+      struct Record tmp1 = build_t_register();
       mips[mips_line].first = tmp1;
-      t_register++;
       mips_line++;
       return tmp1;
     } else {
       // Special case: use srl
       // Init
-      struct Record tmp2 = {.type=REG_T, .data=t_register};
-      t_register++;
-      check_t_register();
-      struct Record tmp = {.type=REG_T, .data=t_register};
-      t_register++;
+      struct Record tmp2 = build_t_register();
+      struct Record tmp = build_t_register();
       int l0 = label;
       label++;
       int l1 = label;
@@ -567,6 +563,15 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
       mips[mips_line].third.data = times;
       mips[mips_line].third.type = REG_NUM;
       mips_line++;
+      // Negative: sub by zero
+      if (num < 0) {
+        mips[mips_line].operation = OP_MINUS;
+        mips[mips_line].first = tmp;
+        mips[mips_line].second.data = -1;
+        mips[mips_line].second.type = REG_ZERO;
+        mips[mips_line].third = tmp2;
+        mips_line++;
+      }
       // j L1
       mips[mips_line].operation = SYB_J;
       mips[mips_line].first.type = SYB_BLOCK;
@@ -602,9 +607,34 @@ struct Record divided(struct Record * current_var1, struct Record * current_var2
 }
 
 struct Record mod(struct Record * current_var1, struct Record * current_var2, struct Line *mips) {
-  fprintf(stderr, "Not Implemented...");
-  struct Record tmp = {};
-  return tmp;
+  // Mod will always between two register
+  // div $t0,$s1
+  // mflo $s2
+  if (current_var2->type != REG_NUM) {
+    mips[mips_line].operation = SYB_DIV;
+    mips[mips_line].first = *current_var1;
+    mips[mips_line].second = *current_var2;
+    mips_line++;
+    mips[mips_line].operation = SYB_MFHI;
+    struct Record temp = build_t_register();
+    mips[mips_line].first = temp;
+    mips_line++;
+
+    return temp;
+  } else {
+    struct Record temp = build_t_register();
+    load_val(current_var2, &temp, mips);
+    mips[mips_line].operation = SYB_DIV;
+    mips[mips_line].first = *current_var1;
+    mips[mips_line].second = temp;
+    mips_line++;
+    mips[mips_line].operation = SYB_MFHI;
+    struct Record temp1 = build_t_register();
+    mips[mips_line].first = temp1;
+    mips_line++;
+
+    return temp1;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -622,9 +652,6 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 26; i++) {
     alphabet[i] = UNREG;
   }
-  // Init registers
-  t_register = 0;
-  s_register = 0;
 
   // Begin Line Iteration
   while (fgets(line, 255, (FILE *) fp) != NULL) {
@@ -636,7 +663,7 @@ int main(int argc, char *argv[]) {
     unsigned long strLen = strlen(line);
     // The last one should be an ENDLINE
     if (line[strLen - 1] != ENDLINE) {
-      fprintf(stderr, "Parsing error...\n");
+      fprintf(stderr, "Parsing error: expecting endline but find '%c'", line[strLen - 1]);
       return EXIT_FAILURE;
     }
 
@@ -658,13 +685,35 @@ int main(int argc, char *argv[]) {
         stage = 4;
       } else if (isspace(c)) {
         continue;
+      } else if (c == OP_MINUS) {
+        // Special: negative number
+        if (isdigit(line[i + 1])) {
+          if (stage == 0 || stage == 2) {
+            i++; // Increase one
+            unsigned long num = read_all_digits(line, &i, strLen);
+            stageNMapper(stage, &current_var1, &current_var2, 0 - num);
+            stage++;
+          } else {
+            fprintf(stderr, "Parsing error...1\n");
+            return EXIT_FAILURE;
+          }
+        } else {
+          // Normal minus symbol
+          if (stage == 1) {
+            current_op = c;
+            stage++;
+          } else {
+            fprintf(stderr, "Parsing error...?\n");
+            return EXIT_FAILURE;
+          }
+        }
       } else if (islower(c)) {
         if (stage == 0 || stage == 2) {
           register_var(c);
           stageSMapper(stage, &current_var1, &current_var2, alphabet[alphabet2num(c)]);
           stage++;
         } else {
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...2\n");
           return EXIT_FAILURE;
         }
       } else if (isdigit(c)) {
@@ -673,7 +722,7 @@ int main(int argc, char *argv[]) {
           stageNMapper(stage, &current_var1, &current_var2, num);
           stage++;
         } else {
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...3\n");
           return EXIT_FAILURE;
         }
       } else if (c == OP_EQ) {
@@ -682,11 +731,10 @@ int main(int argc, char *argv[]) {
           assignee = current_var1;
         } else {
           // Wait! LHS should have only one var, right?
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...4\n");
           return EXIT_FAILURE;
         }
-      } else if (c == OP_MINUS ||
-                 c == OP_PLUS ||
+      } else if (c == OP_PLUS ||
                  c == OP_TIMES ||
                  c == OP_DIVIDED ||
                  c == OP_MOD ) {
@@ -694,50 +742,58 @@ int main(int argc, char *argv[]) {
           current_op = c;
           stage++;
         } else {
-          fprintf(stderr, "Parsing error...\n");
+          fprintf(stderr, "Parsing error...5\n");
           return EXIT_FAILURE;
         }
       } else {
-        fprintf(stderr, "Parsing error...\n");
+        fprintf(stderr, "Parsing error...6\n");
         return EXIT_FAILURE;
       }  // End of registering vars
 
       // Begin parsing line
       if (stage == 3) {
-        check_t_register();
         if (current_op == OP_PLUS) {
           // Reassign next var
           current_var1 = add(&current_var1, &current_var2, mips);
-          stage = 1;
         } else if (current_op == OP_MINUS) {
           current_var1 = minus(&current_var1, &current_var2, mips);
-          stage = 1;
         } else if (current_op == OP_TIMES) {
           current_var1 = multiple(&current_var1, &current_var2, mips);
-          stage = 1;
         } else if (current_op == OP_DIVIDED) {
           current_var1 = divided(&current_var1, &current_var2, mips);
-          stage = 1;
         } else if (current_op == OP_MOD) {
           current_var1 = mod(&current_var1, &current_var2, mips);
-          stage = 1;
         } else {
           fprintf(stderr, "Unrecognized OP...\n");
         }
+        stage = 1;
       } else if (stage == 4) {
         // We need to know if this is an assign?
         if (current_var1.type == REG_NUM) {
           load_val(&current_var1, &assignee, mips);
+        } else if (current_var1.type == REG_S) {
+          // x = a ?
+          mips[mips_line].operation = SYB_MOVE;
+          mips[mips_line].first = assignee;
+          mips[mips_line].second = current_var1;
+          mips_line++;
         } else {
           // Nice! Here should be the end of expression, and let's wrap things up!
           // Assign var to assignee, change the last line of the Line Seq
-          // For special case Division, we need to chang two place
+          // For special case Division, we need to change some places
           if (mips[mips_line - 1].operation == SYB_BLOCK) {
             mips[mips_line - 2].first = assignee; // mflo
-            mips[mips_line - 7].first = assignee; // srl
+            mips[mips_line - 7].first = assignee; // srl/sub
+            // Negative: we need to change different line
+            if (mips[mips_line - 7].operation == OP_MINUS) {
+              mips[mips_line - 7].third = assignee; // sub
+              mips[mips_line - 8].first = assignee; // srl
+            }
           } else {
             mips[mips_line - 1].first = assignee;
           }
+          // We also need to return unused t_register
+          decrease_t_register();
         }
       }
     }
