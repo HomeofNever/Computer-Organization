@@ -41,8 +41,12 @@ loop_body:
 	sw $t1,4($s0)
     sw $t2,8($s0)
     sw $t3,12($s0)
+	# Loop Body
+	# 12 instruction, no stall, no bubble
+	# 16 Cycles
+
 	# lw $a0,0($s0)
-	# li $v0,1
+	# li $v0,1s
 	# syscall
 	# li $v0,4  
 	# la $a0,newline
@@ -52,6 +56,8 @@ loop_body:
 loop_latch:
 	add $s0,$s0,16
 	j loop_header
+	# 16 + 3 = 19
+	# 19 * 4 = 76 Cycles
 
 loop_exit:
 	jr $ra		# return to caller

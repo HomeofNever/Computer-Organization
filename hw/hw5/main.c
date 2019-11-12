@@ -58,12 +58,15 @@ void read_mips(FILE *file) {
     struct Record current_reg2 = {.type=UNREG, .data=UNREG};
 
     while (fgets(mips[mips_line], MAX_LINE_LENGTH, file)) {
-        unsigned long strLen = strlen(mips[mips_]);
+        unsigned long strLen = strlen(mips[mips_line]);
         // The last one should be an ENDLINE
-        if (line[strLen - 1] != ENDLINE) {
-            fprintf(stderr, "Parsing error: expecting endline but find '%c'", line[strLen - 1]);
-            return EXIT_FAILURE;
+        if (mips[mips_line][strLen - 1] != ENDLINE) {
+            fprintf(stderr, "Parsing error: expecting endline but find '%c'", mips[mips_line][strLen - 1]);
+            break;
         }
+
+        // Parsing line: Identify dependency
+            
     }
 }
 
