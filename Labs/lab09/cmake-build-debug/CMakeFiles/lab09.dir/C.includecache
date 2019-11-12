@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/neverbehave/Documents/CSCI2500/Labs/lab09/main.c
+stdio.h
+-
+stdint.h
+-
+stdlib.h
+-
+
