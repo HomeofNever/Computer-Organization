@@ -51,7 +51,7 @@ loop_body:
 	j loop_latch
 
 loop_latch:
-	add $s0,$s0,4
+	add $s0,$s0,16
 	j loop_header
 
 loop_exit:
