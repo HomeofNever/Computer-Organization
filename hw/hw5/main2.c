@@ -52,6 +52,7 @@ struct Line{
     char cols[MAX_CYCLE][MAX_INST_LENGTH];
     int stage;
     int started_at;
+    int nop_at;
 };
 
 struct Line board[MAX];
@@ -68,17 +69,18 @@ bool not_empty(const char * c) {
 }
 
 bool is_nop_1(struct Line *l) {
-  return strcmp(l->instruction.operator, NOP1) == 2;
+  return strcmp(l->instruction.operator, NOP1) == 0;
 }
 
 bool is_nop_2(struct Line *l) {
-  return strcmp(l->instruction.operator, NOP1) == 0;
+  return strcmp(l->instruction.operator, NOP2) == 0;
 }
 
 void initialize_line(struct Line *l) {
   l->instruction = default_instruction;
   l->stage = 0;
   l->started_at = 0;
+  l->nop_at = UNREG;
   for (int i = 0; i < MAX_CYCLE; ++i) {
     strcpy(l->cols[i], ".");
   }
@@ -92,6 +94,20 @@ void init() {
 bool compare_dep(struct Instruction *i, char * d1, char * d2) {
   return (not_empty(d1) && strcmp(i->o, d1) == 0) ||
          (not_empty(d2) && strcmp(i->o, d2) == 0);
+}
+
+bool has_dep(struct Instruction *i, char *d) {
+  return not_empty(d) && (strcmp(i->d1, d) == 0 || strcmp(i->d2, d) == 0);
+}
+
+int find_last_real_inst(int i) {
+  for (int j = i; j >= 0; j--) {
+    if (!(is_nop_2(&board[j]) || is_nop_1(&board[j]))) {
+      return j;
+    }
+  }
+
+  return UNREG;
 }
 
 void read_instruction(const char *line, unsigned long *i, char *inst, unsigned long strLen) {
@@ -180,6 +196,7 @@ void read_mips(FILE *file) {
     // or $s0,$s0,$t3
     // lw $a0,12($sp)
     // sw $t6,32($a1)
+    int nops_at = UNREG;
     for (int j = line_num - 1; j >= 0; j--) {
       if (!(is_nop_1(&board[j]) && is_nop_2(&board[j]))) {
         // Find if there is a dependency
@@ -188,13 +205,20 @@ void read_mips(FILE *file) {
           int dist = line_num - board[j].started_at;
           if (dist > 0) {
             // One bubble
-            strcpy(board[line_num].instruction.operator, "nop1");
-            board[line_num].started_at = real_exec_line;
-            line_num++;
-            if (dist == 2) {
-              strcpy(board[line_num].instruction.operator, "nop2");
+            // Wait! Check if it is waited
+            // If the dep is not the nearest line, the last line may have waited for the dep for you
+            if (j == line_num - 1 ||
+                !has_dep(&board[line_num - 1].instruction, board[j].instruction.o)
+                ) {
+              nops_at = j;
+              strcpy(board[line_num].instruction.operator, "nop1");
               board[line_num].started_at = real_exec_line;
               line_num++;
+              if (dist == 1) {
+                strcpy(board[line_num].instruction.operator, "nop2");
+                board[line_num].started_at = real_exec_line;
+                line_num++;
+              }
             }
           }
           break;
@@ -208,6 +232,7 @@ void read_mips(FILE *file) {
     strcpy(board[line_num].instruction.d2, d2);
     strcpy(board[line_num].instruction.o, o);
     board[line_num].started_at = real_exec_line;
+    board[line_num].nop_at = nops_at;
     line_num++;
     real_exec_line++;
   } // Finish Parsing
@@ -217,11 +242,19 @@ void print_line(struct Line *l) {
   // Current Cycle, Each of them have their own stages
   if (is_nop_1(l)) {
     if (current_cycle > l->started_at + 1) {
-      // We need to print this line
+      printf("nop\t");
+      for (int i = 0; i < MAX_CYCLE; i++) {
+        printf("%s\t", l->cols[i]);
+      }
+      printf("\n");
     }
   } else if (is_nop_2(l)) {
     if (current_cycle > l->started_at + 2) {
-      // We need to print this line
+      printf("nop\t");
+      for (int i = 0; i < MAX_CYCLE; i++) {
+        printf("%s\t", l->cols[i]);
+      }
+      printf("\n");
     }
   } else {
     printf("%s\t", l->instruction.mips);
@@ -252,14 +285,32 @@ bool run_one_stimulation() {
   for (int i = 1; i < line_num; i++) {
     if (current_cycle >= board[i].started_at) {
       if (is_nop_2(&board[i])) {
-
+        if (board[i].stage < MAX_STAGE + 1) {
+          strcpy(board[i].cols[current_cycle], nop_2_stage[board[i].stage]);
+          board[i].stage++;
+        }
       } else if (is_nop_1(&board[i])) {
-
+        if (board[i].stage < MAX_STAGE) {
+          strcpy(board[i].cols[current_cycle], nop_1_stage[board[i].stage]);
+          board[i].stage++;
+        }
       } else {
         if (board[i].stage < MAX_STAGE) {
           // Check dep
-          strcpy(board[i].cols[current_cycle], stages[board[i].stage]);
-          board[i].stage++;
+          if (board[i].nop_at != UNREG) {
+            if (board[board[i].nop_at].stage != 5 && board[i].stage == 1) {
+              strcpy(board[i].cols[current_cycle], stages[board[i].stage]);
+            } else {
+              strcpy(board[i].cols[current_cycle], stages[board[i].stage]);
+              board[i].stage++;
+            }
+          } else {
+            strcpy(board[i].cols[current_cycle], stages[board[i].stage]);
+            if (board[i - 1].stage == 5 || board[i - 1].stage - board[i].stage > 1) {
+              // If the previous block, wait for it
+              board[i].stage++;
+            }
+          }
         }
       }
     }
