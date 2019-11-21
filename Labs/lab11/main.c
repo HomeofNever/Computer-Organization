@@ -89,10 +89,9 @@ uint32_t get_cache_block_size( uint32_t idx_start, uint32_t idx_end, uint32_t bo
     assert( idx_start < idx_end );
     assert( bob + 1 == idx_start );
     /* YOUR CODE HERE */
-    uint32_t index = idx_end - idx_start;
-    uint32_t tag = 31 - index - (bob + 1);
-
-
+    uint32_t index = idx_end - idx_start + 1;
+    uint32_t tag = 32 - index - (bob + 1);
+    
     return 1 + tag + 32;
 }
 
