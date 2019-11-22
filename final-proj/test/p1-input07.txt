@@ -1,0 +1,5 @@
+addi $s0,$s0,7777
+addi $s1,$s1,8888
+andi $s2,$zero,9999
+add $s3,$s0,$s1
+slt $s4,$s0,$s1

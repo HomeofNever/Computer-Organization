@@ -1,0 +1,10 @@
+ori $s1,$zero,999999
+loopy:
+addi $t2,$t2,10000
+addi $s2,$s1,1
+doopy:
+beq $zero,$s1,loopy
+ori $s6,$t6,77
+add $s6,$s1,$s1
+abcdefgh:
+andi $s6,$t5,255
