@@ -13,4 +13,4 @@ class Line:
         self.cycles = ['.' for i in range(self.max_cycle)]
 
     def __str__(self):
-        return '{:<20}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}{:<4}'.format(*[self.mips, *self.cycles])
+        return ('{:<20}' + '{:<4}' * self.max_cycle).format(*[self.mips, *self.cycles])
