@@ -5,7 +5,7 @@ MAX_S = 7  # 0-7
 
 
 class RegisterGroup:
-    def __init__(self):  # All Register should be init here.
+    def __init__(self, forwarding=False):  # All Register should be init here.
         self.t = []
         self.s = []
         for i in range(MAX_T + 1):
@@ -65,7 +65,7 @@ class RegisterGroup:
 
     def set_by_reg(self, reg, val):
         prefix, num, value = reg.get()
-        return self.set(prefix, val)
+        return self.set(prefix, num, val)
 
     # Helpers
     def in_s_range(self, num):

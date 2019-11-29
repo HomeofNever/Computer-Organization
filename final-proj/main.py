@@ -1,10 +1,9 @@
 # Init necessary vars
 import sys
 from RegisterGroup import *
-from Line import *
+from Instructions import *
+from Stimulator import *
 
-SPLIT_INST = " "
-SPLIT_REG = ","
 MAX_CYCLE = 16
 
 BRANCH_PREDICTION_TAKEN = False
@@ -16,32 +15,12 @@ if __name__ == '__main__':
     filename = sys.argv[2]
 
     file = open(filename, "r")
-    """
-    ori $s1,$zero,451
-    Parsing
-    """
 
-    lines = []
-    for line in file:
-        line = line.strip()
-        if line:
-            if line.endswith(":"):
-                # This is a branch
-                branch = Register(prefix=PREFIX_BRANCH, value=line[:-1])
-                lines.append(Line(line, Instruction(inst=PREFIX_BRANCH, o=branch), MAX_CYCLE))
-            else:
-                space = line.split(SPLIT_INST)
-                inst = space[0]
-                regs = space[1].split(SPLIT_REG)
-                lines.append(Line(line,
-                                  Instruction(inst,
-                                              parse_register(regs[0]),
-                                              parse_register(regs[1]),
-                                              parse_register(regs[2])),
-                                  MAX_CYCLE))
-
+    instructions = Instructions(file)
     # Init Instance
     register_group = RegisterGroup()
+
+    stimulator = Stimulator(instructions, register_group, MAX_CYCLE, forwarding)
 
     # Title
     if forwarding:
@@ -61,10 +40,9 @@ if __name__ == '__main__':
         print("----------------------------------------------------------------------------------")
         print("CPU Cycles ===>     1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16")
 
-        # Insts
-        for j in lines:
-            print(j)
-
+        stimulator.run_one_cycle()
+        
+        print(stimulator)
         # Regs
         print(register_group)
 
