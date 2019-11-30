@@ -1,0 +1,18 @@
+Cache size: 256
+Cache associativity: 4
+Cache sets: 64
+Cache algorithm: Belady
+1 (miss)
+33 (miss)
+2 (miss)
+34 (miss)
+65 (miss)
+1 (hit)
+66 (miss)
+2 (hit)
+97 (miss)
+65 (hit)
+Cache accesses: 10
+Cache hits: 3
+Cache misses: 7
+Overall hit rate: 0.300000
