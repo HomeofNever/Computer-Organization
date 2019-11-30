@@ -1,3 +1,4 @@
-ToolSet: 1.0 (local)Options: 
+ToolSet: Debian GNU/Linux 10 (buster) (local)@C:\Users\luox6\AppData\Local\Microsoft\WindowsApps\debian.exe
+Options: 
 
 Options:

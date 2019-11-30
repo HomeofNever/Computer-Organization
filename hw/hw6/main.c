@@ -40,18 +40,17 @@ int find(struct array *arr, int target) {
 }
 
 int distance(int target, int start_index) {
-  int max = -1;
   for (int i = start_index; i < item_num; i++) {
     if (target == mem_address[i]) {
-      max = i;
+      return i;
     }
   }
 
-  return max;
+  return -1;
 }
 
-int find_smallest(struct array * arr) {
-  int small = -1;
+int find_smallest(struct array *arr) {
+  int small = 99999;
   for (int i = 0; i < arr->num; i++) {
     if (arr->array[i] < small) {
       small = arr->array[i];
@@ -61,7 +60,7 @@ int find_smallest(struct array * arr) {
   return small;
 }
 
-int find_largest(struct array * arr) {
+int find_largest(struct array *arr) {
   int large = -1;
   for (int i = 0; i < arr->num; i++) {
     if (arr->array[i] > large) {
@@ -72,7 +71,7 @@ int find_largest(struct array * arr) {
   return large;
 }
 
-void find_indexes(struct array * arr, struct array * result, int value) {
+void find_indexes(struct array *arr, struct array *result, int value) {
   for (int i = 0; i < arr->num; i++) {
     if (value == arr->array[i]) {
       result->array[result->num] = i;
@@ -81,7 +80,7 @@ void find_indexes(struct array * arr, struct array * result, int value) {
   }
 }
 
-void extract_index(struct array * source, struct array * index, struct array * result) {
+void extract_index(struct array *source, struct array *index, struct array *result) {
   for (int i = 0; i < index->num; i++) {
     result->array[result->num] = source->array[index->array[i]];
     result->num++;
@@ -111,44 +110,42 @@ void push_lru(struct array *arr, int target) {
   }
 }
 
-void push_belady(int index, int cindex, int fd) {
-  if (fd == -1) {
-    if (cache[cindex].num < set_num) {
-      cache[cindex].array[cache[cindex].num] = mem_address[index];
-      cache[cindex].num++;
+void push_belady(int index, int cindex) {
+  if (cache[cindex].num < set_num) {
+    cache[cindex].array[cache[cindex].num] = mem_address[index];
+    cache[cindex].num++;
+  } else {
+    // Find furthest distance
+    struct array distances = {
+            .num = 0,
+            .array = calloc(set_num, sizeof(int))
+    };
+    for (int i = 0; i < set_num; i++) {
+      distances.array[i] = distance(cache[cindex].array[i], index);
+      distances.num++;
+    }
+
+    // How many never access(-1） do we have?
+    struct array result = {
+            .num = 0,
+            .array = calloc(set_num, sizeof(int))
+    };
+    find_indexes(&distances, &result, -1);
+
+    // More than 2
+    if (result.num > 1) {
+      struct array negative = {
+              .num = 0,
+              .array = calloc(set_num, sizeof(int))
+      };
+      extract_index(&cache[cindex], &result, &negative);
+      cache[cindex].array[find(&cache[cindex], find_smallest(&negative))] = mem_address[index];
+    } else if (result.num == 1) {
+      // Replace the one with -1
+      cache[cindex].array[result.array[0]] = mem_address[index];
     } else {
-      // Find furthest distance
-      struct array distances = {
-              .num = 0,
-              .array = calloc(set_num, sizeof(int))
-      };
-      for (int i = 0; i < set_num; i++) {
-        distances.array[i] = distance(cache[cindex].array[i], index);
-        distances.num++;
-      }
-
-      // How many never access(-1） do we have?
-      struct array result = {
-              .num = 0,
-              .array = calloc(set_num, sizeof(int))
-      };
-      find_indexes(&distances, &result, -1);
-
-      // More than 2
-      if (result.num > 1) {
-        struct array negative = {
-                .num = 0,
-                .array = calloc(set_num, sizeof(int))
-        };
-        extract_index(&cache[cindex], &distances, &negative);
-        cache[cindex].array[find_smallest(&negative)] = mem_address[index];
-      } else if (result.num == 1){
-        // Replace the one with -1
-        cache[cindex].array[result.array[0]] = mem_address[index];
-      } else {
-        // We dont have any, remove the one with largest distance
-        cache[cindex].array[find(&distances, find_largest(&distances))] = mem_address[index];
-      }
+      // We dont have any, remove the one with largest distance
+      cache[cindex].array[find(&distances, find_largest(&distances))] = mem_address[index];
     }
   }
 }
@@ -163,8 +160,12 @@ bool access_lru(int target) {
 bool access_belady(int index) {
   int cindex = cache_index(mem_address[index]);
   int fd = find(&cache[cindex], mem_address[index]);
-  push_belady(index, cindex, fd);
-  return fd != -1;
+  if (fd == -1) {
+    push_belady(index, cindex);
+    return false;
+  } else {
+    return true;
+  }
 }
 
 int main(int argc, char *argv[]) {

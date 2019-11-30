@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/Users/neverbehave/Documents/CSCI2500/hw/hw5/main.c" "/Users/neverbehave/Documents/CSCI2500/hw/hw5/cmake-build-debug/CMakeFiles/hw5.dir/main.c.o"
+  "/mnt/c/Users/luox6/OneDrive - Rensselaer Polytechnic Institute/Documents/Project/CO/CSCI2500-19FALL/hw/hw5/main.c" "/mnt/c/Users/luox6/OneDrive - Rensselaer Polytechnic Institute/Documents/Project/CO/CSCI2500-19FALL/hw/hw5/cmake-build-debug/CMakeFiles/hw5.dir/main.c.o"
   )
-set(CMAKE_C_COMPILER_ID "AppleClang")
+set(CMAKE_C_COMPILER_ID "GNU")
 
 # The include file search paths:
 set(CMAKE_C_TARGET_INCLUDE_PATH

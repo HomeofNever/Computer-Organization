@@ -1,4 +1,4 @@
-# Install script for directory: /Users/neverbehave/Documents/CSCI2500/hw/hw5
+# Install script for directory: /mnt/c/Users/luox6/OneDrive - Rensselaer Polytechnic Institute/Documents/Project/CO/CSCI2500-19FALL/hw/hw5
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -27,6 +27,11 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
+# Install shared libraries without execute permission?
+if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
+  set(CMAKE_INSTALL_SO_NO_EXE "1")
+endif()
+
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -40,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/neverbehave/Documents/CSCI2500/hw/hw5/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/c/Users/luox6/OneDrive - Rensselaer Polytechnic Institute/Documents/Project/CO/CSCI2500-19FALL/hw/hw5/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

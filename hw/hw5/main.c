@@ -33,6 +33,7 @@
 #define NOP1 "nop1"
 #define NOP2 "nop2"
 
+// Struct
 struct Instruction {
     char mips[MAX_LINE_LENGTH];
     char operator[MAX_INST_LENGTH];
@@ -55,6 +56,7 @@ struct Line {
     int nop_at;
 };
 
+// Init Global Vars
 struct Line board[MAX];
 char stages[5][4] = {"IF", "ID", "EX", "MEM", "WB"};
 char nop_1_stage[5][4] = {"IF", "ID", "*", "*", "*"};
@@ -63,7 +65,7 @@ int line_num = 0;
 int real_exec_line = 0;
 int current_cycle = 0;
 
-
+// Helper
 bool not_empty(const char *c) {
   return c[0] != '\0';
 }
@@ -76,6 +78,18 @@ bool is_nop_2(struct Line *l) {
   return strcmp(l->instruction.operator, NOP2) == 0;
 }
 
+bool compare_dep(struct Instruction *i, char *d1, char *d2) {
+  return (not_empty(d1) && strcmp(i->o, d1) == 0) ||
+         (not_empty(d2) && strcmp(i->o, d2) == 0);
+}
+
+bool has_dep(struct Instruction *i, char *d) {
+  return not_empty(d) &&
+         ((not_empty(i->d1) && strcmp(i->d1, d) == 0) ||
+          (not_empty(i->d2) && strcmp(i->d2, d) == 0));
+}
+
+// Init
 void initialize_line(struct Line *l) {
   l->instruction = default_instruction;
   l->stage = 0;
@@ -91,27 +105,7 @@ void init() {
     initialize_line(&board[i]);
 }
 
-bool compare_dep(struct Instruction *i, char *d1, char *d2) {
-  return (not_empty(d1) && strcmp(i->o, d1) == 0) ||
-         (not_empty(d2) && strcmp(i->o, d2) == 0);
-}
-
-bool has_dep(struct Instruction *i, char *d) {
-  return not_empty(d) &&
-         ((not_empty(i->d1) && strcmp(i->d1, d) == 0) ||
-          (not_empty(i->d2) && strcmp(i->d2, d) == 0));
-}
-
-//int find_last_real_inst(int i) {
-//  for (int j = i; j >= 0; j--) {
-//    if (!(is_nop_2(&board[j]) || is_nop_1(&board[j]))) {
-//      return j;
-//    }
-//  }
-//
-//  return UNREG;
-//}
-
+// Read Helper
 void read_instruction(const char *line, unsigned long *i, char *inst, unsigned long strLen) {
   unsigned int index = 0;
   for (unsigned long j = *i; j < strLen; j++) {
@@ -127,8 +121,6 @@ void read_instruction(const char *line, unsigned long *i, char *inst, unsigned l
 }
 
 void read_parts(const char *line, unsigned long *i, char *reg, unsigned long strLen) {
-  // or $s0,$s0,$t3
-  // lw $a0,12($sp)
   unsigned long j;
   for (j = *i; j < strLen; j++) {
     if (line[j] == SYB_DOLLAR) {
@@ -147,7 +139,6 @@ void read_parts(const char *line, unsigned long *i, char *reg, unsigned long str
 
 
 void read_mips(FILE *file) {
-//  struct Line *l = &board[line_num];
   char current_line[MAX_LINE_LENGTH];
   while (fgets(current_line, MAX_LINE_LENGTH, file)) {
     // Remove the last newline

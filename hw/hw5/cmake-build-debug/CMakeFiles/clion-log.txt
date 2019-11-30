@@ -1,4 +1,4 @@
-"/Users/neverbehave/Library/Application Support/JetBrains/Toolbox/apps/CLion/ch-0/193.5233.10/CLion 2019.3 EAP.app/Contents/bin/cmake/mac/bin/cmake" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/neverbehave/Documents/CSCI2500/hw/hw5
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/mnt/c/Users/luox6/OneDrive - Rensselaer Polytechnic Institute/Documents/Project/CO/CSCI2500-19FALL/hw/hw5"
 -- Configuring done
 -- Generating done
--- Build files have been written to: /Users/neverbehave/Documents/CSCI2500/hw/hw5/cmake-build-debug
+-- Build files have been written to: /mnt/c/Users/luox6/OneDrive - Rensselaer Polytechnic Institute/Documents/Project/CO/CSCI2500-19FALL/hw/hw5/cmake-build-debug

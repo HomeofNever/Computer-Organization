@@ -2,7 +2,7 @@
 
 PREFIX=hw6
 SETNUM=(1 2 4)
-METHODS=(Belady)
+METHODS=(LRU Belady)
 INPUT=(01 02 03 04)
 for n in "${SETNUM[@]}"
 do

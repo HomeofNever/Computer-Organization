@@ -1,1 +1,1 @@
-/Library/Developer/CommandLineTools/usr/bin/cc -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/hw5.dir/main.c.o  -o hw5 
+/usr/bin/cc -g   CMakeFiles/hw5.dir/main.c.o  -o hw5 
