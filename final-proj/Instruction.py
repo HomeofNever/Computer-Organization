@@ -22,9 +22,6 @@ class Instruction:
             self.d2 = d3
             self.o = d1
 
-    def is_branch(self):
-        return self.inst == PREFIX_BRANCH
-
     def run(self, register_group):
         # Run Command Immediately and get result
         switcher = {
@@ -41,7 +38,14 @@ class Instruction:
 
         func = switcher.get(self.inst, lambda : print("ERR: Inst {} Not Found".format(self.inst)))
 
-        return func(self.d1, self.d2)
+        d1 = self.d1
+        if not d1.is_integer():
+            d1 = register_group.get_by_reg(d1)
+        d2 = self.d2
+        if not d2.is_integer():
+            d2 = register_group.get_by_reg(d2)
+
+        return func(d1, d2)
 
     def copy(self):
         return copy.deepcopy(self)

@@ -25,9 +25,6 @@ class Stimulator:
             i.run_one_stage()
         
         self.cycle += 1
-    
-    def is_data_hazard(self):
-        return False
 
     def is_control_hazard(self):
         return False

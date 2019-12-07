@@ -12,7 +12,6 @@ VALUE_DEFAULT = 0
 def parse_register(reg):
     if reg[0] == SYB_DOLLAR:
         reg = reg[1:]
-
     if reg == PREFIX_ZERO:
         return Register(PREFIX_ZERO)
     elif reg[0].isdigit():
@@ -27,10 +26,11 @@ def parse_register(reg):
 
 
 class Register:
-    def __init__(self, prefix=PREFIX_DEFAULT, num=NUM_DEFAULT, value=VALUE_DEFAULT):
+    def __init__(self, prefix=PREFIX_DEFAULT, num=NUM_DEFAULT, value=VALUE_DEFAULT, ready=False):
         self.prefix = prefix
         self.num = num
         self.value = value
+        self.ready = ready
 
     def get(self):
         return self.prefix, self.num, self.value
@@ -49,6 +49,16 @@ class Register:
 
     def is_integer(self):
         return self.prefix == PREFIX_INTEGER
+
+    def is_ready(self):
+        return self.ready
+    
+    def set_ready(self, ready = True):
+        self.ready = ready
+
+    def reset(self):
+        self.value = VALUE_DEFAULT
+        self.ready = False
 
     def __eq__(self, other):
         return self.prefix == other.prefix and self.num == other.num
