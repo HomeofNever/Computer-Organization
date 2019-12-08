@@ -51,7 +51,7 @@ class Register:
         return self.prefix == PREFIX_BRANCH
 
     def is_integer(self):
-        return self.prefix == PREFIX_INTEGER
+        return self.prefix == PREFIX_INTEGER or self.prefix == PREFIX_ZERO
 
     def is_ready(self):
         return self.ready
@@ -64,7 +64,10 @@ class Register:
         self.ready = False
 
     def __eq__(self, other):
-        return self.prefix == other.prefix and self.num == other.num
+        if other == None:
+            return False
+        else:
+            return self.prefix == other.prefix and self.num == other.num
 
     def __str__(self):
         return '${}{} = {}'.format(self.prefix, self.num, self.value)

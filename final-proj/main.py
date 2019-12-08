@@ -1,6 +1,5 @@
 # Init necessary vars
 import sys
-from RegisterGroup import *
 from Instructions import *
 from Stimulator import *
 
@@ -18,9 +17,8 @@ if __name__ == '__main__':
 
     instructions = Instructions(file)
     # Init Instance
-    register_group = RegisterGroup()
 
-    stimulator = Stimulator(instructions, register_group, MAX_CYCLE, forwarding)
+    stimulator = Stimulator(instructions, MAX_CYCLE, forwarding)
 
     # Title
     if forwarding:
@@ -40,10 +38,13 @@ if __name__ == '__main__':
         print("----------------------------------------------------------------------------------")
         print("CPU Cycles ===>     1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16")
 
-        stimulator.run_one_cycle()
+        end = stimulator.run_one_cycle()
         
         print(stimulator)
         # Regs
-        print(register_group)
+        print(stimulator.register_group)
+
+        if end:
+            break
 
         # Identity number element we need, from instruction

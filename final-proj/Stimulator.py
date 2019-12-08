@@ -1,9 +1,10 @@
 from Line import *
+from RegisterGroup import *
 
 class Stimulator:
-    def __init__(self, instructions, register_group, max_cycle = -1, forwarding = False):
+    def __init__(self, instructions, max_cycle = -1, forwarding = False):
         self.instructions = instructions
-        self.register_group = register_group
+        self.register_group = RegisterGroup()
         self.max_cycle = max_cycle
         self.cycle = 0
         self.forwarding = forwarding
@@ -23,7 +24,7 @@ class Stimulator:
                     self.program_counter
             )
 
-        if inst is not None:
+        if inst != None:
             self.runtime.append(Line(inst, self.cycle, self.max_cycle))
             self.program_counter += 1
             self.end = False
@@ -57,3 +58,4 @@ class Stimulator:
         s = ''
         for i in self.runtime:
             s += str(i) + '\n'
+        return s

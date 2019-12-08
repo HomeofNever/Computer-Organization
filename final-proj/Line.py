@@ -33,12 +33,12 @@ class Line:
                         # Request Vars
                         self.d1 = self.instruction.d1
                         self.d2 = self.instruction.d2
-                        if not d1.is_integer():
-                            self.d1 = register_group.get_by_reg(d1)
+                        if not self.d1.is_integer():
+                            self.d1 = register_group.get_by_reg(self.d1).get_value()
                         else:
                             self.d1 = self.d1.get_value()
-                        if not d2.is_integer():
-                            self.d2 = register_group.get_by_reg(d2)
+                        if not self.d2.is_integer():
+                            self.d2 = register_group.get_by_reg(self.d2).get_value()
                         else:
                             self.d2 = self.d2.get_value()
                         
@@ -56,7 +56,7 @@ class Line:
                         r = self.instruction.run(self.d1, self.d2)
                         if not self.instruction.o.is_branch():
                             # Set FW Reg
-                            register_group.set_by_reg(self.instruction.o, r, True)
+                            register_group.set_forwarding_by_reg(self.instruction.o, r)
                         self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
                         self.cycle += 1
                     elif self.cycle == 4:

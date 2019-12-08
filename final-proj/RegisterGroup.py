@@ -19,11 +19,11 @@ class RegisterGroup:
             self.t_locked.append(0)
         for i in range(MAX_S + 1):
             self.s.append(Register('s', i, ready=True))
-            self.ft.append(Register('t', i))
+            self.fs.append(Register('t', i))
             self.s_locked.append(0)
 
     # Accessors
-    def get_s(self, num, forwarding):
+    def get_s(self, num, forwarding=False):
         if self.in_s_range(num):
             if forwarding:
                 return self.fs[num]
@@ -33,7 +33,7 @@ class RegisterGroup:
             print("ERR: S Register Out of range: {}".format(num))
             return -1
 
-    def get_t(self, num, forwarding):
+    def get_t(self, num, forwarding=False):
         if self.in_t_range(num):
             if forwarding:
                 return self.ft[num]
@@ -56,13 +56,15 @@ class RegisterGroup:
         # Try fast forwarding then normal, or failed
         if self.is_reg_locked(reg):
             if self.forwarding:
-                target = self.get(prefix, num, True)
+                target = self.get(reg.prefix, reg.num, True)
                 if target.is_ready():
                     return target
                 else:
                     return None
+            else: 
+                return None
         else:
-            return self.get(prefix, num)
+            return self.get(reg.prefix, reg.num)
 
 
     def set_s(self, num, val):
@@ -74,8 +76,8 @@ class RegisterGroup:
 
     def set_t(self, num, val):
         if self.in_t_range(num):
-            self.ft[num].reset() # reset forward when wb
             self.t[num].set(val)
+            self.ft[num].reset() # reset forward when wb
         else:
             print("ERR: T Register Out of range when set: {}".format(num))
 
@@ -103,15 +105,15 @@ class RegisterGroup:
                 print("ERR: type not recognized: {}".format(prefix))
         elif not pre:
             if prefix == 's':
-                return self.set_s(num, val, forwarding)
+                return self.set_s(num, val)
             elif prefix == 't':
-                return self.set_t(num, val, forwarding)
+                return self.set_t(num, val)
             else:
                 print("ERR: type not recognized: {}".format(prefix))
 
-    def set_by_reg(self, reg, val, pre=True):
+    def set_by_reg(self, reg, val):
         prefix, num, value = reg.get()
-        self.set(prefix, num, val, pre)
+        self.set(prefix, num, val)
 
     def set_forwarding_by_reg(self, reg, val):
         if self.forwarding:
@@ -131,22 +133,20 @@ class RegisterGroup:
     def lock_by_reg(self, reg):
         prefix, num, value = reg.get()
         if prefix == 's':
-            return self.s_locked[num] += 1
+            self.s_locked[num] += 1
         elif prefix == 't':
-            return self.t_locked[num] += 1
+            self.t_locked[num] += 1
         else:
             print("ERR: type not recognized: {}".format(prefix))
-            return None
     
     def unlock_by_reg(self, reg):
         prefix, num, value = reg.get()
         if prefix == 's':
-            return self.s_locked[num] -= 1
+            self.s_locked[num] -= 1
         elif prefix == 't':
-            return self.t_locked[num] -= 1
+            self.t_locked[num] -= 1
         else:
             print("ERR: type not recognized: {}".format(prefix))
-            return None
 
     # Helpers
     def in_s_range(self, num):

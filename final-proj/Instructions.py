@@ -28,7 +28,7 @@ class Instructions:
     def get_instruction_by_index(self, index):
         if index < len(self.instructions):
             return self.instructions[index]
-        else 
+        else:
             return None
 
     def get_instruction_by_key(self, key):
