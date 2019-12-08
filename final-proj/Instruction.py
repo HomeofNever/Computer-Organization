@@ -22,7 +22,7 @@ class Instruction:
             self.d2 = d3
             self.o = d1
 
-    def run(self, register_group):
+    def run(self, d1, d2):
         # Run Command Immediately and get result
         switcher = {
             'add': lambda a, b: a + b,
@@ -37,13 +37,6 @@ class Instruction:
         }
 
         func = switcher.get(self.inst, lambda : print("ERR: Inst {} Not Found".format(self.inst)))
-
-        d1 = self.d1
-        if not d1.is_integer():
-            d1 = register_group.get_by_reg(d1)
-        d2 = self.d2
-        if not d2.is_integer():
-            d2 = register_group.get_by_reg(d2)
 
         return func(d1, d2)
 

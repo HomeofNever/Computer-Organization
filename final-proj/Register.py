@@ -16,10 +16,10 @@ def parse_register(reg):
         return Register(PREFIX_ZERO)
     elif reg[0].isdigit():
         return Register(PREFIX_INTEGER, value=int(reg))
+    elif reg[1].isdigit() and (reg[0] in REGISTER_PREFIX):
+        return Register(reg[0], int(reg[1]))
     elif reg[0].isalpha():
         return Register(PREFIX_BRANCH, value=reg)
-    elif reg[0] in REGISTER_PREFIX:
-        return Register(reg[0], int(reg[1]))
     else:
         print("ERR: Recongized Register Type: {}".format(reg))
         return None
@@ -34,6 +34,9 @@ class Register:
 
     def get(self):
         return self.prefix, self.num, self.value
+
+    def get_value(self):
+        return self.value
 
     def set(self, value):
         self.value = value
