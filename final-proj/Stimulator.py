@@ -4,7 +4,7 @@ from RegisterGroup import *
 class Stimulator:
     def __init__(self, instructions, max_cycle = -1, forwarding = False):
         self.instructions = instructions
-        self.register_group = RegisterGroup()
+        self.register_group = RegisterGroup(forwarding)
         self.max_cycle = max_cycle
         self.cycle = 0
         self.forwarding = forwarding

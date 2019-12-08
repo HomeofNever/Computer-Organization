@@ -161,8 +161,7 @@ class RegisterGroup:
 $s4 = {:<14}$s5 = {:<14}$s6 = {:<14}$s7 = {}
 $t0 = {:<14}$t1 = {:<14}$t2 = {:<14}$t3 = {}
 $t4 = {:<14}$t5 = {:<14}$t6 = {:<14}$t7 = {}
-$t8 = {:<14}$t9 = {}
-        """.format(self.get_s(0).value, self.get_s(1).value, self.get_s(2).value, self.get_s(3).value, self.get_s(4).value,
+$t8 = {:<14}$t9 = {}""".format(self.get_s(0).value, self.get_s(1).value, self.get_s(2).value, self.get_s(3).value, self.get_s(4).value,
                    self.get_s(5).value, self.get_s(6).value, self.get_s(7).value, self.get_t(0).value, self.get_t(1).value,
                    self.get_t(2).value, self.get_t(3).value, self.get_t(4).value, self.get_t(5).value, self.get_t(6).value,
                    self.get_t(7).value, self.get_t(8).value, self.get_t(9).value)

@@ -26,14 +26,6 @@ if __name__ == '__main__':
     else:
         print("START OF SIMULATION (no forwarding)")
 
-    '''
-    More specifically, the first column must have a width of exactly 20 characters, while each subsequent
-    column (corresponding to each clock cycle) must have a width of exactly four characters. Include
-    a space between each column and left-justify each column. Further, be sure there are no trailing
-    spaces on the end of each line of output.
-    Finally, show no more than 16 cycles in your simulation, meaning that if you reach cycle 16, display
-    that last cycle and end your simulation.
-    '''
     for i in range(1, MAX_CYCLE):
         print("----------------------------------------------------------------------------------")
         print("CPU Cycles ===>     1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16")
@@ -46,5 +38,6 @@ if __name__ == '__main__':
 
         if end:
             break
-
-        # Identity number element we need, from instruction
+    
+    print("----------------------------------------------------------------------------------")
+    print("END OF SIMULATION")

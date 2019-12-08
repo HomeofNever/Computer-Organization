@@ -28,17 +28,18 @@ class Instruction:
             'add': lambda a, b: a + b,
             'addi': lambda a, b: a + b,
             'and': lambda a, b: a & b,
+            'andi': lambda a, b: a & b,
             'or': lambda a, b: a | b,
             'ori': lambda a, b: a | b,
-            'slt': lambda a, b: 0 if a < b else 1,
-            'slti': lambda a, b: 0 if a < b else 1,
+            'slt': lambda a, b: 1 if a < b else 0,
+            'slti': lambda a, b: 1 if a < b else 0,
             'beq': lambda a, b: True if a == b else False,
             'bne': lambda a, b: True if a != b else False,
         }
 
-        func = switcher.get(self.inst, lambda : print("ERR: Inst {} Not Found".format(self.inst)))
+        func = switcher.get(self.inst, lambda a, b: print("ERR: Inst {} Not Found".format(self.inst)))
 
-        return func(d1, d2)
+        return func(d1.get_value(), d2.get_value())
 
     def copy(self):
         return copy.deepcopy(self)

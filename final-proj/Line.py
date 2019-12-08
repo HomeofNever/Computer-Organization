@@ -22,31 +22,27 @@ class Line:
         if self.cycle < 5:
             if not self.invaild:
                 if last_cycle > self.cycle:
-                    if self.cycle == 0:
-                        # Lock var in if stage
-                        o = self.instruction.o
-                        if not o.is_branch():
-                            register_group.lock_by_reg(o)
-                        self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
-                        self.cycle += 1
-                    elif self.cycle == 1:
+                    if self.cycle == 1:
                         # Request Vars
                         self.d1 = self.instruction.d1
                         self.d2 = self.instruction.d2
                         if not self.d1.is_integer():
-                            self.d1 = register_group.get_by_reg(self.d1).get_value()
-                        else:
-                            self.d1 = self.d1.get_value()
+                            self.d1 = register_group.get_by_reg(self.d1)
+
                         if not self.d2.is_integer():
-                            self.d2 = register_group.get_by_reg(self.d2).get_value()
-                        else:
-                            self.d2 = self.d2.get_value()
+                            self.d2 = register_group.get_by_reg(self.d2)
+                        
+                        # Lock computed var 
+                        o = self.instruction.o
+                        if not o.is_branch():
+                            register_group.lock_by_reg(o)
                         
                         if self.d1 != None and self.d2 != None:
                             # No Data Hazard, preceed
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
                             self.cycle += 1
                         else:
+                            print(self.d1, self.d2)
                             # Data Hazard: cannot access reg
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
                             self.nop += 1
@@ -63,6 +59,7 @@ class Line:
                         # Write Back
                         r = self.instruction.run(self.d1, self.d2)
                         if self.instruction.o.is_branch():
+                            # return control hazard, if any.
                             result = r
                         else:
                             # When Set, Unlock Reg

@@ -68,6 +68,9 @@ class Register:
             return False
         else:
             return self.prefix == other.prefix and self.num == other.num
+    
+    def __ne__(self, other):
+        return not (self == other)
 
     def __str__(self):
         return '${}{} = {}'.format(self.prefix, self.num, self.value)
