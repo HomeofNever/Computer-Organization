@@ -39,7 +39,7 @@ class Instruction:
 
         func = switcher.get(self.inst, lambda a, b: print("ERR: Inst {} Not Found".format(self.inst)))
 
-        return func(d1.get_value(), d2.get_value())
+        return func(d1, d2)
 
     def copy(self):
         return copy.deepcopy(self)

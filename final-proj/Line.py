@@ -14,6 +14,7 @@ class Line:
         self.nop = 0
         self.d1 = None
         self.d2 = None
+        self.result = None
         self.nops = []
         self.cycles = DEFAULT_CYCLES(max_cycle)
     
@@ -39,31 +40,33 @@ class Line:
                         
                         if self.d1 != None and self.d2 != None:
                             # No Data Hazard, preceed
+                            self.d1 = self.d1.get_value()
+                            self.d2 = self.d2.get_value()
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
+                            if current_cycle - self.started_at > 1:
+                                # Data Hazard Detection
+                                self.nops.append(self.cycles.copy())
+                                self.nop += 1
                             self.cycle += 1
                         else:
-                            print(self.d1, self.d2)
                             # Data Hazard: cannot access reg
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
-                            self.nop += 1
-                            self.nops.append(self.cycles.copy())
                     elif self.cycle == 2:
                         # EX stage
-                        r = self.instruction.run(self.d1, self.d2)
+                        self.result = self.instruction.run(self.d1, self.d2)
                         if not self.instruction.o.is_branch():
                             # Set FW Reg
-                            register_group.set_forwarding_by_reg(self.instruction.o, r)
+                            register_group.set_forwarding_by_reg(self.instruction.o, self.result)
                         self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
                         self.cycle += 1
                     elif self.cycle == 4:
                         # Write Back
-                        r = self.instruction.run(self.d1, self.d2)
                         if self.instruction.o.is_branch():
                             # return control hazard, if any.
-                            result = r
+                            result = self.result
                         else:
                             # When Set, Unlock Reg
-                            register_group.set_by_reg(self.instruction.o, r)
+                            register_group.set_by_reg(self.instruction.o, self.result)
                             register_group.unlock_by_reg(self.instruction.o)
                         
                         self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
@@ -84,7 +87,8 @@ class Line:
 
     def update_nops(self, current_cycle):
         for i in range(self.nop):
-            self.nops[i][current_cycle] = "*"
+            if current_cycle - self.started_at - i < 5:
+                self.nops[i][current_cycle] = "*"
 
     def get_cycle(self):
         return self.cycle

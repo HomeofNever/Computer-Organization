@@ -42,7 +42,7 @@ class Stimulator:
             ls_cyc = e.get_cycle()
             if res == True:
                 # Control Hazard
-                self.runtime.pop() # Remove last instruction added
+                self.register_group.reset_forwarding()
                 self.mark_invalid(i)
                 self.program_counter = self.instructions.get_instruction_by_key(e.instruction.o.get_value())
                 self.add_instruction()

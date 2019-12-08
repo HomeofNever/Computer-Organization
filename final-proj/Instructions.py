@@ -14,7 +14,7 @@ class Instructions:
             if line:
                 if line.endswith(":"):
                     # This is a branch
-                    self.branches.set(line[:-1], i + 1)
+                    self.branches.set(line[:-1], i)
                 else:
                     space = line.split(SPLIT_INST)
                     inst = space[0]
@@ -34,6 +34,6 @@ class Instructions:
     def get_instruction_by_key(self, key):
         br = self.branches.get(key)
         if br:
-            return self.get_instruction_by_index(br)
+            return br
         else:
             print("ERR: branch NOT Found")

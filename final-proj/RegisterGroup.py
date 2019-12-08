@@ -3,6 +3,9 @@ from Register import *
 MAX_T = 9  # 0-9
 MAX_S = 7  # 0-7
 
+DEFAULT_LOCKED_LIST = lambda num: [0 for i in range(num)]
+DEFAULT_LOCKED_S = DEFAULT_LOCKED_LIST(MAX_S + 1)
+DEFAULT_LOCKED_T = DEFAULT_LOCKED_LIST(MAX_T + 1)
 
 class RegisterGroup:
     def __init__(self, forwarding=False):  # All Register should be init here.
@@ -10,17 +13,15 @@ class RegisterGroup:
         self.s = []
         self.ft = []
         self.fs = []
-        self.t_locked = []
-        self.s_locked = []
+        self.t_locked = DEFAULT_LOCKED_T.copy()
+        self.s_locked = DEFAULT_LOCKED_S.copy()
         self.forwarding = forwarding
         for i in range(MAX_T + 1):
             self.t.append(Register('t', i, ready=True))
             self.ft.append(Register('t', i))
-            self.t_locked.append(0)
         for i in range(MAX_S + 1):
             self.s.append(Register('s', i, ready=True))
             self.fs.append(Register('t', i))
-            self.s_locked.append(0)
 
     # Accessors
     def get_s(self, num, forwarding=False):
@@ -83,14 +84,14 @@ class RegisterGroup:
 
     def set_forwarding_t(self, num, val):
         if self.in_t_range(num):
-            self.ft[num].set(num)
+            self.ft[num].set(val)
             self.ft[num].set_ready()
         else:
             print("ERR: T Register Out of range when set: {}".format(num))
     
     def set_forwarding_s(self, num, val):
         if self.in_s_range(num):
-            self.fs[num].set(num)
+            self.fs[num].set(val)
             self.fs[num].set_ready()
         else:
             print("ERR: S Register Out of range when set: {}".format(num))
@@ -148,6 +149,14 @@ class RegisterGroup:
         else:
             print("ERR: type not recognized: {}".format(prefix))
 
+    def reset_forwarding(self):
+        for i in self.fs:
+            i.reset()
+        for i in self.ft:
+            i.reset()
+        self.s_locked = DEFAULT_LOCKED_S.copy()
+        self.t_locked = DEFAULT_LOCKED_T.copy()
+        
     # Helpers
     def in_s_range(self, num):
         return 0 <= num <= MAX_S

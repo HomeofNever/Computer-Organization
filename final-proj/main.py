@@ -26,7 +26,7 @@ if __name__ == '__main__':
     else:
         print("START OF SIMULATION (no forwarding)")
 
-    for i in range(1, MAX_CYCLE):
+    for i in range(1, MAX_CYCLE + 1):
         print("----------------------------------------------------------------------------------")
         print("CPU Cycles ===>     1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16")
 
