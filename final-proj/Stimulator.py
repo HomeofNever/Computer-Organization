@@ -36,16 +36,19 @@ class Stimulator:
         self.add_instruction()
 
         ls_cyc = len(DEFAULT_STAGE) # First one has no limit
-        for i, e in enumerate(self.runtime):
+        i = 0
+        while i < len(self.runtime): # Since we need to change the list, we cannot use for i in self.runtime
             # register_group, last_cycle, current_cycle
-            res = e.run_one_stage(self.register_group, ls_cyc, self.cycle)
-            ls_cyc = e.get_cycle()
+            res = self.runtime[i].run_one_stage(self.register_group, ls_cyc, self.cycle)
+            ls_cyc = self.runtime[i].get_cycle()
             if res == True:
                 # Control Hazard
                 self.register_group.reset_forwarding()
                 self.mark_invalid(i)
-                self.program_counter = self.instructions.get_instruction_by_key(e.instruction.o.get_value())
+                self.program_counter = self.instructions.get_instruction_by_key(self.runtime[i].instruction.o.get_value())
                 self.add_instruction()
+            
+            i += 1
 
         self.cycle += 1
         return self.end and self.runtime[-1].get_cycle() == 5

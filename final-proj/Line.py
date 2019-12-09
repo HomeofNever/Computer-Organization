@@ -16,13 +16,15 @@ class Line:
         self.d2 = None
         self.result = None
         self.nops = []
+        self.data_hazard = False
         self.cycles = DEFAULT_CYCLES(max_cycle)
     
     def run_one_stage(self, register_group, last_cycle, current_cycle):
         result = None
+        self.data_hazard_handler()
         if self.cycle < 5:
             if not self.invaild:
-                if last_cycle > self.cycle:
+                if last_cycle > self.cycle and (last_cycle == 5 or last_cycle != self.cycle + 1):
                     if self.cycle == 1:
                         # Request Vars
                         self.d1 = self.instruction.d1
@@ -47,10 +49,7 @@ class Line:
                         else:
                             # Data Hazard: cannot access reg
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
-                        if current_cycle - self.started_at > 1:
-                            # Data Hazard Detection
-                            self.nops.append(self.cycles.copy())
-                            self.nop += 1
+                            self.data_hazard = True
                     elif self.cycle == 2:
                         # EX stage
                         self.result = self.instruction.run(self.d1, self.d2)
@@ -77,7 +76,7 @@ class Line:
                         self.cycle += 1
                 else:
                     # Current Stage have to stall for last one to finish
-                    self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle - 1]
+                    self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
             else:
                 self.cycles[current_cycle] = "*"
                 self.cycle += 1
@@ -85,9 +84,16 @@ class Line:
         self.update_nops(current_cycle)
         return result
 
+    def data_hazard_handler(self):
+        if self.data_hazard:
+            # Data Hazard Detection
+            self.nops.append(self.cycles.copy())
+            self.nop += 1
+            self.data_hazard = False
+
     def update_nops(self, current_cycle):
         for i in range(self.nop):
-            if current_cycle - self.started_at - i < 5:
+            if current_cycle - self.started_at < 5 + i:
                 self.nops[i][current_cycle] = "*"
 
     def get_cycle(self):
