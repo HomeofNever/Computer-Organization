@@ -43,14 +43,14 @@ class Line:
                             self.d1 = self.d1.get_value()
                             self.d2 = self.d2.get_value()
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
-                            if current_cycle - self.started_at > 1:
-                                # Data Hazard Detection
-                                self.nops.append(self.cycles.copy())
-                                self.nop += 1
                             self.cycle += 1
                         else:
                             # Data Hazard: cannot access reg
                             self.cycles[current_cycle] = DEFAULT_STAGE[self.cycle]
+                        if current_cycle - self.started_at > 1:
+                            # Data Hazard Detection
+                            self.nops.append(self.cycles.copy())
+                            self.nop += 1
                     elif self.cycle == 2:
                         # EX stage
                         self.result = self.instruction.run(self.d1, self.d2)
@@ -99,8 +99,8 @@ class Line:
     def __str__(self):
         nops = ''
         for i in self.nops:
-            nops += ('{:<20}' + '{:<4}' * self.max_cycle).format(*["nop", *i]) + "\n"
+            nops += ('{:<20}' + '{:<4}' * (self.max_cycle - 1) + '{}').format(*["nop", *i]) + "\n"
         
-        current_line = ('{:<20}' + '{:<4}' * self.max_cycle).format(*[self.instruction.mips, *self.cycles])
+        current_line = ('{:<20}' + '{:<4}' * (self.max_cycle - 1) + '{}').format(*[self.instruction.mips, *self.cycles])
 
         return nops + current_line
