@@ -1,0 +1,114 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{datetime}
+\usepackage{enumerate}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,backgrounds}
+
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+
+\title{\bf \Large ASSIGNMENT 2}
+\author{Xinhao Luo} 
+\date{\today}
+
+\def\math#1{$#1$}
+
+\setlength{\textheight}{8.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\voffset0.0in
+
+\begin{document}
+\maketitle
+\medskip
+
+\section{Problem 2.8}
+
+Translate 0xabcdef12 into decimal.
+
+\begin{itemize}
+    \item \math{a = 10, b = 11, c = 12, d = 13, e = 14, f = 15}
+    \item EQ: \begin{equation}
+            \begin{split}
+                2 \times 16^0 + 1 \times 16^1 + 15 \times 16^2 + 14 \times 16^3 + 13 \times 16^4 + 12 \times 16^5 + 11 \times 16^6 + 10 \times 16^7 = 2882400018
+            \end{split}
+        \end{equation}
+\end{itemize}
+
+\section{Problem 2.16}
+Provide the type, assembly language instruction, and binary representation of instruction described by the following MIPS fields:
+
+op=0, rs=3, rt=2, rd=3, shamt=0, funct=34
+
+\begin{itemize}
+    \item [type] R-Type
+    \item [assembly] sub \$v1, \$v1, \$v0
+    \item [binary] 000000 00011 00010 00011 00000 100010
+\end{itemize}
+
+\section{Problem 2.18}
+Assume that we would like to expand the MIPS register file to 128 registers and expand the instruction set to contain four times as many instructions.
+
+\begin{enumerate}[1)]
+    \item \begin{enumerate}
+        \item \math{\log_2 128 = 7}, so the register field will need to have 7 bits.
+        \item Since we need to \math{4x} instruction, opcode will need to have \math{6 + 2 = 8} bits
+        \item Since we need to keep length as 32 bits as well, we will have (1 of 2 possible conditions)
+            \begin{itemize}
+                \item [op] 8 bits (+2 bits)
+                \item [rs] 7 bits (+2 bits)
+                \item [rt] 7 bits (+2 bits)
+                \item [rd] 7 bits (+2 bits)
+                \item [shamt] 1 bits (-4 bits)
+                \item [funct] 2 bits (-4 bits)
+            \end{itemize}
+        \end{enumerate}
+    \item \begin{enumerate}
+        \item \math{\log_2 128 = 7}, so the register field will need to have 7 bits.
+        \item Since we need to \math{4x} instruction, opcode will need to have \math{6 + 2 = 8} bits
+        \item Since we need to keep length as 32 bits as well, we will have 
+            \begin{itemize}
+                \item [op] 8 bits (+2 bits)
+                \item [rs] 7 bits (+2 bits)
+                \item [rt] 7 bits (+2 bits)
+                \item [constant or address] 10 bits (-6 bits)
+            \end{itemize}
+        \end{enumerate}
+    \item \begin{enumerate}
+        \item 128 Registrar
+            \begin{itemize}
+                \item [Increase size] Since we used to use 5 bit per register, the longer the size of the register will force the size of the instruction increase as well, in order to consist with the length of the register. The size of MIPS program will increase
+                \item [Decrease size] If we have more registers, we maybe able to use less instructions to finish the task than before. We can combine some instructions without reassigning variables between task so that the total number of instructions decrease, and the size of MIPS program will decrease
+                \end{itemize}
+        \item \math{4x instruction}
+            \begin{itemize}
+                \item [Increase size] The Opcode used to have 6 bits. The size of Opcode will make each instructions longer and eventually increase the size of the program.
+                \item [Decrease size] The number of instructions may be reduced as more instruction provided. We may uses some extended instructions that represent multiple line of instructions in the past. The size of MIPS program will decrease due to less number of instruction present.
+            \end{itemize}
+    \end{enumerate}
+\end{enumerate}
+
+\section{Problem 2.25}
+\begin{enumerate}[1)]
+    \item I-type may be the best solution, and we have the following structure 
+        \begin{itemize}
+            \item op
+            \item rs
+            \item rd
+            \item immediate value
+        \end{itemize}
+    \item \begin{enumerate}[1/]
+        \item loop:
+        \item slt \$t3, \$zero, \$t2, 
+        \item beq \$t3, \$zero, Exit
+        \item addi \$t2, \$t2, -1
+        \item j loop
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}
