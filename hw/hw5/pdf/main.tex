@@ -1,0 +1,160 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{datetime}
+\usepackage{enumerate}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,backgrounds}
+
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+
+\title{\bf \Large ASSIGNMENT 5}
+\author{Xinhao Luo} 
+\date{\today}
+
+\def\math#1{$#1$}
+
+\setlength{\textheight}{8.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\voffset0.0in
+
+\begin{document}
+\maketitle
+\medskip
+
+\section{Problem 4.3}
+\begin{enumerate}[1)]
+    \item Improvement 
+    \begin{itemize}
+        \item Without Improvement
+          \begin{equation}
+            \begin{split}
+                T &= \text{I-Mem} + Mux + ALU + Regs + \text{D-Mem} + Mux\\
+                &= 400ps + 30ps + 120ps + 200ps + 350ps \\
+                &= 1130ps
+            \end{split}
+          \end{equation}
+        \item With Improvement: No MUL, ALU latency is \math{300ps + 120ps = 420ps}
+            \begin{equation}
+            \begin{split}
+                T &= \text{I-Mem} + Mux + ALU + Regs + \text{D-Mem} + Mux \\
+                &= 400ps + 30ps + 420ps + 200ps + 350ps + 30ps \\
+                &= 1430ps
+            \end{split}
+          \end{equation}
+    \end{itemize}
+    \item Speed-up: It actually seems like a slow-down
+    \begin{equation}
+        \begin{split}
+            \frac{1}{0.95} \times \frac{1130}{1430} = 0.83
+        \end{split}
+    \end{equation}
+    \item Cost
+        \begin{itemize}
+            \item [Total Cost] \math{1000 + (2 \times 30) + (3 \times 10) + 100 + 200 + 2000 + 500 = 3890}
+            \item [New Cost] \math{3890 + 600 = 4490}
+            \item [Relative Cost] \math{3890 / 4490 = 1.15}
+            \item [Cost/Performance Ratio] \math{ratio = \frac{\text{Relative Cost}}{\text{Speed-up}} = \frac{1.15}{0.83} = 1.39}
+        \end{itemize}
+        The result suggest that the basic processor is better.
+\end{enumerate}
+
+\section{Problem 4.4}
+\begin{enumerate}[1)]
+    \item 200ps
+    \item \math{200ps + 15ps + 10ps + 70ps + 20ps = 315ps}
+    \item \math{200ps + 90ps + 20ps + 90ps + 20ps = 420ps}
+    \item PC-relative branches instructions, like beq, etc.
+    \item PC-relative unconditional branches
+    \item Affected sections
+        \begin{itemize}
+            \item [beq] \math{15 + 10 + 70 = 95}
+            \item [add] \math{90 + 20 + 90 = 200}
+        \end{itemize}
+    In order to affect the latency, shift left 2 has to increase by \math{200 - 95 = 105ps}.
+\end{enumerate}
+
+\section{Problem 4.7}
+\begin{enumerate}[1)]
+    \item 
+        \begin{enumerate}[i)]
+            \item Instruction 0-15: 0000000000010100 \\
+                After Extended: 00000000000000000000000000010100 
+            \item Instruction 0-25: 00011000100000000000010100 \\
+                Shift left 2: 01100010000000000001010000
+        \end{enumerate}
+    \item 
+        \begin{enumerate}[i)]
+            \item Instruction [5-0]: 010100
+            \item Instruction [31-26]: 101011 \\
+                  Corresponded to Instruction sw
+            \item ALUOp when opcode is sw: 00
+            \item Source will be 010100 and 00
+        \end{enumerate}
+    \item From part 2, we know that OPcode is sw, which means address will only increase by 4 as normal. \\
+    Path: \math{PC \to PC + 4 \to Branch Mux \to Jump Mux \to PC}
+    \item 
+        \begin{enumerate}[i)]
+            \item As this is instruction sw, the Mux outputing the address will be PC+4
+            \item For sw instruction, the value of RegDst could be 1, the output of this Mux could be [15-11] 00000
+            \item Alusrc will be 1 for store and load, which corresponded to the sign extended. The Mux here will be from instruction [0-15] and extended to  00000000000000000000000000010100
+            \item SW has nothing to do with data memory, the MemtoReg here will be don't care. The possible output will be 10001 from ALU or the data from address corresponded to 10001 in data memory.
+        \end{enumerate}
+    \item 
+        \begin{enumerate}[i)]
+            \item ALU: 
+                \begin{enumerate}
+                    \item [source 1]  
+                        \begin{itemize}
+                            \item Instruction [25-21] 00011
+                            \item corresponded to r3 = -3
+                        \end{itemize}
+                    \item [source 2]
+                        \begin{itemize}
+                            \item From Q4, we know that Mux here will give 10100
+                        \end{itemize}
+                \end{enumerate}
+            \item Add (PC+4)
+                \begin{enumerate}
+                    \item PC 
+                    \item 4
+                \end{enumerate}
+            \item Add (Branch)
+                \begin{enumerate}
+                    \item PC+4
+                    \item From Q4, we know that the extend is 10100, so after left shift it would be 1010000
+                \end{enumerate}
+        \end{enumerate}
+    \item 
+        \begin{enumerate}
+            \item Instruction[25-21] 00011
+            \item Instruction[20-16] 00010
+            \item From Q4, the regDst for sw is 1, so the value will be 00000
+            \item Since it is sw instruction, Reg write here will receive from output from Mux controlled by MemToReg, which is don't care. From Q4, the possible input from mux will be 10001 or data in address of 10001
+            \item RegWrite will be 0
+        \end{enumerate}
+\end{enumerate}
+
+\section{Problem 4.8}
+\begin{enumerate}[1)]
+    \item 
+        \begin{itemize}
+            \item pipeline: 350ps (largest one)
+            \item non-pipeline: \math{250ps + 350ps + 150ps + 300ps + 200ps = 1250ps}
+        \end{itemize}
+    \item
+        \begin{itemize}
+            \item pipeline: \math{350ps * 5 = 1750ps}
+            \item non-pipeline: \math{250ps + 350ps + 150ps + 300ps + 200ps = 1250ps}
+        \end{itemize}
+    \item Split the one with the longest latency, ID, and the new clock cycle will be 300ps as MEM become the longest one.
+    \item Data memory will be used when doing lw and sw, so the rate will be \math{20\% + 15\% = 35\%}
+    \item write register will be used when doing lw and alu, so the rate will be \math{45\% + 20\% = 65\%}
+\end{enumerate}
+
+\end{document}
