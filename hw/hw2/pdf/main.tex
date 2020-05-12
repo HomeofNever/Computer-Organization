@@ -1,0 +1,218 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{datetime}
+\usepackage{enumerate}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,backgrounds}
+
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+
+\title{\bf \Large ASSIGNMENT 2}
+\author{Xinhao Luo} 
+\date{\today}
+
+\def\math#1{$#1$}
+
+\setlength{\textheight}{8.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\voffset0.0in
+
+\begin{document}
+\maketitle
+\medskip
+
+\section{Problem 1.6}
+
+\begin{itemize}
+    \item P1 
+    \begin{itemize}
+        \item CPU Clock Cycle
+            \begin{equation}
+                \begin{split}
+                   (1 \times 10\% \times 10^6) + (2 \times 20\% \times 10^6) + (3 \times 50\% \times 10^6) + (3 \times 20\% \times 10^6) = 2.6 \times 10^6
+                \end{split}
+            \end{equation}
+        \item CPU Time
+            \begin{equation}
+                \begin{split}
+                  \frac{2.6 \times 10^6}{2.5 GHz} = 1.04 \times 10^{-3} s
+                \end{split}
+            \end{equation}
+    \end{itemize}
+    \item P2
+        \begin{itemize}
+        \item CPU Clock Cycle
+            \begin{equation}
+                \begin{split}
+                   (2 \times 10\% \times 10^6) + (2 \times 20\% \times 10^6) + (2 \times 50\% \times 10^6) + (2 \times 20\% \times 10^6) = 2 \times 10^6
+                \end{split}
+            \end{equation}
+        \item CPU Time
+            \begin{equation}
+                \begin{split}
+                  \frac{2 \times 10^6}{3 GHz} = 6.67 \times 10^{-4} s
+                \end{split}
+            \end{equation}
+    \end{itemize}
+\end{itemize}
+
+P2 implementation is faster
+
+\begin{enumerate}[(a)]
+    \item Global CPI
+        \begin{itemize}
+            \item P1 
+                \begin{equation}
+                    \begin{split}
+                       \frac{2.6 \times 10^6}{10^6} = 2.6
+                    \end{split}
+                \end{equation}
+            \item P2
+                \begin{equation}
+                    \begin{split}
+                       \frac{2 \times 10^6}{10^6} = 2
+                    \end{split}
+                \end{equation}
+        \end{itemize}
+    \item Clock Cycles
+        \begin{itemize}
+            \item P1: \math{2.6 \times 10^6}
+            \item P2: \math{2 \times 10^6}
+        \end{itemize}
+\end{enumerate}
+
+\section{Problem 1.9}
+\begin{enumerate}[(1)]
+    \item Execution Time
+        \begin{itemize}
+            \item [1 Processor]
+                 \begin{equation}
+                    \begin{split}
+                       \frac{(1 \times 2.56 \times 10^9) + (12 \times 1.28 \times 10^9) + (5 \times 2.56 \times 10^8)}{2 GHz} = 9.6s
+                    \end{split}
+                \end{equation}
+            \item [2 Processors]
+                \begin{equation}
+                    \begin{split}
+                       \frac{\frac{(1 \times 2.56 \times 10^9) + (12 \times 1.28 \times 10^9)}{0.7 \times 2} + (5 \times 2.56 \times 10^8)}{2 GHz} = 7.04s
+                    \end{split}
+                \end{equation}
+            Speed Up \math{9.6 / 7.04 = 1.36 }
+            \item [4 Processors]
+                \begin{equation}
+                    \begin{split}
+                       \frac{\frac{(1 \times 2.56 \times 10^9) + (12 \times 1.28 \times 10^9)}{0.7 \times 4} + (5 \times 2.56 \times 10^8)}{2 GHz} = 3.84s
+                    \end{split}
+                \end{equation}
+              Speed Up \math{9.6 / 3.84 = 2.5}
+            \item [8 Processors]
+                \begin{equation}
+                    \begin{split}
+                       \frac{\frac{(1 \times 2.56 \times 10^9) + (12 \times 1.28 \times 10^9)}{0.7 \times 8} + (5 \times 2.56 \times 10^8)}{2 GHz} = 2.24s
+                    \end{split}
+                \end{equation}
+                Speed Up \math{9.6 / 2.24 = 4.29}
+        \end{itemize}
+    \item Arithmetic Doubled
+        \begin{itemize}
+            \item [1 Processor]
+                 \begin{equation}
+                    \begin{split}
+                       9.6s + \frac{(1 \times 2.56 \times 10^9)}{2 GHz} = 10.88s
+                    \end{split}
+                \end{equation}
+                Slowed down \math{10.88 / 9.6 = 1.13}
+            \item [2 Processors]
+                \begin{equation}
+                    \begin{split}
+                       7.04s + \frac{(1 \times 2.56 \times 10^9)}{0.7 \times 2 \times 2 GHz} = 7.95s
+                    \end{split}
+                \end{equation}
+                Slowed down \math{7.95 / 7.04 = 1.13}
+            \item [4 Processors]
+                \begin{equation}
+                    \begin{split}
+                        3.84s + \frac{(1 \times 2.56 \times 10^9)}{0.7 \times 4 \times 2 GHz} = 4.30s
+                    \end{split}
+                \end{equation}
+              Slowed down \math{4.30 / 3.84 = 1.12}
+            \item [8 Processors]
+                \begin{equation}
+                    \begin{split}
+                        2.24s + \frac{(1 \times 2.56 \times 10^9)}{0.7 \times 8 \times 2 GHz} = 2.47s
+                    \end{split}
+                \end{equation}
+                Slowed down \math{2.47 / 2.24 = 1.10}
+        \end{itemize}
+    \item Reduced Load function
+        \begin{equation}
+            \begin{split}
+               \frac{(1 \times 2.56 \times 10^9) + (1.28 \times x \times 10^9)}{0.7 \times 4} &= (1 \times 2.56 \times 10^9) + (1.28 \times x \times 10^9) \\
+               x &= 3 
+            \end{split}
+        \end{equation}
+        When the number of load instruction reduced to \math{\frac{|3-12|}{12} = 75\%}, a single processor will have same performance as 4 processors.
+\end{enumerate}
+
+\section{Problem 1.12}
+\begin{enumerate}[(1)]
+    \item Fallacy
+        \begin{itemize}
+            \item [P1 CPU Time]
+             \begin{equation}
+                    \begin{split}
+                       \frac{0.9 \times 5 \times 10^9}{4GHz} = 1.125
+                    \end{split}
+                \end{equation}
+            \item [P2 CPU Time]
+                \begin{equation}
+                    \begin{split}
+                       \frac{0.75 \times 1 \times 10^9}{3GHz} = 0.25
+                    \end{split}
+                \end{equation}
+        \end{itemize}
+        It is not true for both P1 and P2
+    \item  \begin{equation}
+                \begin{split}
+                   \frac{0.9 \times 1 \times 10^9}{4GHz} &= \frac{0.75 \times x}{3GHz} \\
+                   x &= 0.9 \times 10^9
+                \end{split}
+            \end{equation}
+            P2 can execute \math{0.9 \times 10^9} instruction at the same time.
+\end{enumerate}
+
+\section{Problem 1.14}
+
+\begin{enumerate}[(1)]
+    \item \math{\text{Execution Time} = \frac{\text{Clock Cycles}}{\text{Clock rate}}}
+        \begin{equation}
+            \begin{split}
+               \frac{(1 \times 5 \times 10^7) + (1 \times 1.1 \times 10^8) + (4 \times 8 \times 10^7) + (2 \times 1.6 \times 10^7)}{2GHz} = 2.56 \times 10^{-1} s\\
+               1.28 \times 10^{-1}s = \frac{(x \times 5 \times 10^7) + (1 \times 1.1 \times 10^8) + (4 \times 8 \times 10^7) + (2 \times 1.6 \times 10^7)}{2GHz} \\
+               x = -4.12
+            \end{split}
+        \end{equation}
+        However, a negative CPI is not possible. 
+    \item 
+        \begin{equation}
+            \begin{split}
+               1.28 \times 10^{-1}s = \frac{(1 \times 5 \times 10^7) + (1 \times 1.1 \times 10^8) + (x \times 8 \times 10^7) + (2 \times 1.6 \times 10^7)}{2GHz} \\
+               x = 0.8
+            \end{split}
+        \end{equation}
+    \item  \begin{equation}
+                \begin{split}
+                   \frac{(1 \times (1 - 0.4) \times 5 \times 10^7) + (1 \times (1 - 0.4) \times 1.1 \times 10^8) + (4 \times (1 - 0.3) \times 8 \times 10^7) + (2 \times (1 - 0.3) \times 1.6 \times 10^7)}{2GHz} \\
+                   = 1.712 \times 10^{-1} s
+                \end{split}
+            \end{equation}
+        Speed up \math{\frac{2.56 \times 10^{-1}}{1.712 \times 10^{-1}} = 1.49}
+\end{enumerate}
+
+\end{document}
