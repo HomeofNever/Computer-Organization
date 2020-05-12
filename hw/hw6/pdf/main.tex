@@ -1,0 +1,532 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{datetime}
+\usepackage{enumerate}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,backgrounds}
+
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+
+\title{\bf \Large ASSIGNMENT 6}
+\author{Xinhao Luo} 
+\date{\today}
+
+\def\math#1{$#1$}
+
+\setlength{\textheight}{8.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\voffset0.0in
+
+\begin{document}
+\maketitle
+\medskip
+
+\section{Problem 5.2}
+3, 180, 43, 2, 191, 88, 190, 14, 181, 44, 186, 253
+\begin{enumerate}[1)]
+    \item Tag size = \math{32 - log_2(16) - log_2(1) = 28} bits
+        \begin{center}
+            \begin{tabular}{ |c|c|c|c|c| }
+             \hline
+             decimal address & binary address & tag & index & hit/missed \\
+             \hline
+             3 & 0000 0011 & 0000 & 0011 & MISS \\  
+             \hline
+             180 & 1011 0100 & 1011 & 0100 & MISS \\
+             \hline
+             43 & 0010 1011 & 0100 & 1011 & MISS \\
+             \hline
+             2 & 0000 0010 & 0000 & 0010 & MISS\\
+             \hline
+             191 & 1011 1111 & 1011 & 1111 & MISS\\
+             \hline
+             88 & 0101 1000 & 0101 & 1000 & MISS \\
+             \hline
+             190 & 1011 1110 & 1011 & 1110 & MISS \\
+             \hline
+             14 & 0000 1110 & 0000 & 1110 & MISS \\
+             \hline
+             181 & 1011 0101 & 1011 & 0101 & MISS \\
+             \hline
+             44 & 0010 1100 & 0010 & 1100 & MISS \\
+             \hline
+             186 & 1011 1010 & 1011 & 1010 & MISS \\
+             \hline
+             253 & 1111 1101 & 1111 & 1101 & MISS \\
+             \hline
+            \end{tabular}
+        \end{center}
+    \item Tag size = \math{32 - log_2(8) - log_2(1) = 28} bits
+        \begin{center}
+            \begin{tabular}{ |c|c|c|c|c|c| }
+             \hline
+             decimal address & binary address & tag & index & offset & hit/missed \\
+             \hline
+             3 & 0000 0011 & 0000 & 001 & 1 & MISS \\  
+             \hline
+             180 & 1011 0100 & 1011 & 010 & 0 & MISS \\
+             \hline
+             43 & 0010 1011 & 0100 & 101 & 1 & MISS \\
+             \hline
+             2 & 0000 0010 & 0000 & 001 & 0 & HIT \\
+             \hline
+             191 & 1011 1111 & 1011 & 111 & 1 & MISS\\
+             \hline
+             88 & 0101 1000 & 0101 & 100 & 0 & MISS \\
+             \hline
+             190 & 1011 1110 & 1011 & 111 & 0 & HIT \\
+             \hline
+             14 & 0000 1110 & 0000 & 111 & 0 & MISS \\
+             \hline
+             181 & 1011 0101 & 1011 & 010 & 1 & HIT \\
+             \hline
+             44 & 0010 1100 & 0010 & 110 & 0 & MISS \\
+             \hline
+             186 & 1011 1010 & 1011 & 101 & 0 & MISS \\
+             \hline
+             253 & 1111 1101 & 1111 & 110 & 1 & MISS \\
+             \hline
+            \end{tabular}
+        \end{center}
+    \item 
+        \begin{enumerate}[\text{C}1)]
+            \item Tag size = \math{32 - log_2(8) = 29} bits
+            \begin{center}
+                \begin{tabular}{ |c|c|c|c|c| }
+                 \hline
+                 decimal address & binary address & tag & index & hit/missed \\
+                 \hline
+                 3 & 0000 0011 & 00000 & 011 & MISS \\  
+                 \hline
+                 180 & 1011 0100 & 10110 & 100 & MISS \\
+                 \hline
+                 43 & 0010 1011 & 01001 & 011 & MISS \\
+                 \hline
+                 2 & 0000 0010 & 00000 & 010 & MISS \\
+                 \hline
+                 191 & 1011 1111 & 10111 & 111 & MISS\\
+                 \hline
+                 88 & 0101 1000 & 01011 & 000 & MISS \\
+                 \hline
+                 190 & 1011 1110 & 10111 & 110 & MISS \\
+                 \hline
+                 14 & 0000 1110 & 00001 & 110 & MISS \\
+                 \hline
+                 181 & 1011 0101 & 10110 & 101 & MISS \\
+                 \hline
+                 44 & 0010 1100 & 00101 & 100 & MISS \\
+                 \hline
+                 186 & 1011 1010 & 10111 & 010 & MISS \\
+                 \hline
+                 253 & 1111 1101 & 11111 & 101 & MISS \\
+                 \hline
+                 MISS RATE & \math{\frac{12}{12} = 1} \\ 
+                \end{tabular}
+        \end{center}
+        Cycles \math{ = 2 \times 12 + 12 \times 25 = 324}
+        \item Tag size = \math{32 - log_2(4) - log_2(2) = 29} bits
+        \begin{center}
+            \begin{tabular}{ |c|c|c|c|c|c| }
+             \hline
+             decimal address & binary address & tag & index & offset & hit/missed \\
+             \hline
+             3 & 0000 0011 & 00000 & 01 & 1 & MISS \\  
+             \hline
+             180 & 1011 0100 & 10110 & 10 & 0 & MISS \\
+             \hline
+             43 & 0010 1011 & 01001 & 01 & 1 & MISS \\
+             \hline
+             2 & 0000 0010 & 00000 & 01 & 0 & MISS \\
+             \hline
+             191 & 1011 1111 & 10111 & 11 & 1 & MISS\\
+             \hline
+             88 & 0101 1000 & 01011 & 00 & 0 & MISS \\
+             \hline
+             190 & 1011 1110 & 10111 & 11 & 0 & HIT \\
+             \hline
+             14 & 0000 1110 & 00001 & 11 & 0 & MISS \\
+             \hline
+             181 & 1011 0101 & 10110 & 10 & 1 & HIT \\
+             \hline
+             44 & 0010 1100 & 00101 & 10 & 0 & MISS \\
+             \hline
+             186 & 1011 1010 & 10111 & 01 & 0 & MISS \\
+             \hline
+             253 & 1111 1101 & 11111 & 10 & 1 & MISS \\
+             \hline
+             MISS RATE & \math{\frac{10}{12} = 0.833} \\
+             \hline
+            \end{tabular}
+        \end{center}
+        Cycles \math{ = 12 \times 3 + 10 \times 25 = 286}
+        \item Tag size = \math{32 - log_2(2) - log_2(4) = 29} bits
+        \begin{center}
+            \begin{tabular}{ |c|c|c|c|c|c| }
+             \hline
+             decimal address & binary address & tag & index & offset & hit/missed \\
+             \hline
+             3 & 0000 0011 & 00000 & 0 & 11 & MISS \\  
+             \hline
+             180 & 1011 0100 & 10110 & 1 & 00 & MISS \\
+             \hline
+             43 & 0010 1011 & 01001 & 0 & 11 & MISS \\
+             \hline
+             2 & 0000 0010 & 00000 & 0 & 10 & MISS \\
+             \hline
+             191 & 1011 1111 & 10111 & 1 & 11 & MISS\\
+             \hline
+             88 & 0101 1000 & 01011 & 0 & 00 & MISS \\
+             \hline
+             190 & 1011 1110 & 10111 & 1 & 10 & HIT \\
+             \hline
+             14 & 0000 1110 & 00001 & 1 & 10 & MISS \\
+             \hline
+             181 & 1011 0101 & 10110 & 1 & 01 & MISS \\
+             \hline
+             44 & 0010 1100 & 00101 & 1 & 00 & MISS \\
+             \hline
+             186 & 1011 1010 & 10111 & 0 & 10 & MISS \\
+             \hline
+             253 & 1111 1101 & 11111 & 1 & 01 & MISS \\
+             \hline
+             MISS RATE & \math{\frac{11}{12} = 0.916} \\
+             \hline
+            \end{tabular}
+        \end{center}
+        Cycles \math{ = 12 \times 5 + 11 \times 25 = 335}
+        \item The one with least cycles is the best, so C2 is the best.
+        \end{enumerate}
+    \item 
+        \begin{enumerate}[1)]
+            \item 
+                 \begin{enumerate}[i)]
+                    \item Each block has \math{2 \times 4 = 8} bytes
+                    \item The number of block is \math{32 \times 1024 / 8 = 4096}
+                    \item For index, we need \math{log_2(4096) = 12} bits
+                    \item For offset, we need 1 bits, and the rest will be for tag, which is \math{32 - 12 - 1 = 19} bits.
+                    \item For a single block, we will need \math{32 \times 2} data, \math{19} tag size, and 1 valid bit. \math{64 + 19 + 1 = 84}
+                    \item In Total, we need \math{4096 \times 84 = 344064} bits
+                \end{enumerate}
+            \item 
+                \begin{enumerate}
+                    \item \math{log_2(16) = 4} bit offsets
+                    \item Set the number of index bit \math{X}, so the data size would be \math{16 \cdot 4 \cdot 8 \cdot 2^X = 2^{X + 9}}
+                    \item Tag size is \math{32 - X - 4} bits.
+                    \item For a single block, we will have \math{1 + 32 - X - 4}(offset bit), plus the data size
+                    \item \math{2^{X + 9} + (29 - X) * 2^{X} \geq 344064}
+                    \item When \math{X = 10}, the total size would be \math{543744}
+                \end{enumerate}
+            \item The larger cache would possible need longer access time, which decrease its performance.
+        \end{enumerate}
+    \item 
+        \begin{enumerate}
+            \item Example addresses here will be
+                \begin{itemize}
+                    \item 00000000000000000000000000000000
+                    \item 10000000000000000000000000000000
+                    \item 00000000000000000000000000000000
+                \end{itemize}
+            \item Example addresses here will be
+                \begin{itemize}
+                    \item 00000000000000000000000000000000
+                    \item 00000000010000000000000000000000
+                    \item 00000000100000000000000000000000
+                    \item 00000000000000000000000000000000
+                \end{itemize}
+                All of them will MISS in both cache
+            \item Adv \& disAdv
+                \begin{itemize}
+                    \item [Advantage] Direct mapping won't need to alter the address before any actions 
+                    \item [Disadvantage] Generating sequence for different mapping bring extra complexity and maybe harder to achieve hits for any read operations
+                \end{itemize}
+        \end{enumerate}
+    \item It is possible, and the tag bits will need to be entered again once the bits are XOR for the direct-mapped cache
+\end{enumerate}
+
+\section{Problem 5.7}
+\begin{enumerate}[1)]
+    \item 
+        \begin{enumerate}
+            \item  Block size = \math{24 / 2 = 12}; Set size = \math{12 / 3 = 4}
+            \item \# of index bit = 2; \# of offset bit = 1; \# of tag bit = 29
+            \item 
+                \begin{center}
+                    \begin{tabular}{ |c|c|c|c|c|c| }
+                     \hline
+                     decimal address & binary address & tag & index & offset & hit/missed \\
+                     \hline
+                     3 & 0000 0011 & 00000 & 01 & 1 & MISS \\  
+                     \hline
+                     180 & 1011 0100 & 10110 & 10 & 0 & MISS \\
+                     \hline
+                     43 & 0010 1011 & 01001 & 01 & 1 & MISS \\
+                     \hline
+                     2 & 0000 0010 & 00000 & 01 & 0 & HIT \\
+                     \hline
+                     191 & 1011 1111 & 10111 & 11 & 1 & MISS\\
+                     \hline
+                     88 & 0101 1000 & 01011 & 00 & 0 & MISS \\
+                     \hline
+                     190 & 1011 1110 & 10111 & 11 & 0 & HIT \\
+                     \hline
+                     14 & 0000 1110 & 00001 & 11 & 0 & MISS \\
+                     \hline
+                     181 & 1011 0101 & 10110 & 10 & 1 & HIT \\
+                     \hline
+                     44 & 0010 1100 & 00101 & 10 & 0 & MISS \\
+                     \hline
+                     186 & 1011 1010 & 10111 & 01 & 0 & MISS \\
+                     \hline
+                     253 & 1111 1101 & 11111 & 10 & 1 & MISS \\
+                     \hline
+                    \end{tabular}
+                \end{center}
+            \item 
+                \begin{center}
+                    \begin{tabular}{ |c|c|c|c|c| }
+                     \hline
+                     & Set 0 & Set 1 & Set 2 & Set 3 \\
+                     \hline
+                     Content 0 & men[88] & mem[3] & mem[180] & mem[191] \\
+                     \hline
+                     Content 1 & & mem[43] & mem[44] & mem[14] \\
+                     \hline
+                     Content 2 & & mem[186] & mem[253] & \\
+                     \hline
+                    \end{tabular}
+                \end{center}
+        \end{enumerate}
+    \item 
+        \begin{enumerate}
+            \item No index bit, No offset bit
+            \item \# of set = 8 / 1 = 8
+            \item 
+                \begin{center}
+                    \begin{tabular}{ |c|c|c|c| }
+                     \hline
+                     decimal address & binary address & tag & hit/missed \\
+                     \hline
+                     3 & 0000 0011 & 00000011 & MISS \\  
+                     \hline
+                     180 & 1011 0100 & 10110100 & MISS \\
+                     \hline
+                     43 & 0010 1011 & 01001011 & MISS \\
+                     \hline
+                     2 & 0000 0010 & 00000010 & MISS \\
+                     \hline
+                     191 & 1011 1111 & 10111111 & MISS\\
+                     \hline
+                     88 & 0101 1000 & 01011000 & MISS \\
+                     \hline
+                     190 & 1011 1110 & 10111110 & MISS \\
+                     \hline
+                     14 & 0000 1110 & 00001110 & MISS \\
+                     \hline
+                     181 & 1011 0101 & 10110101 & MISS \\
+                     \hline
+                     44 & 0010 1100 & 00101100 & MISS \\
+                     \hline
+                     186 & 1011 1010 & 10111010 & MISS \\
+                     \hline
+                     253 & 1111 1101 & 11111101 & MISS \\
+                     \hline
+                    \end{tabular}
+                \end{center}
+            \item 
+                \begin{center}
+                    \begin{tabular}{ |c|c| }
+                     \hline
+                     & Set 0 \\
+                     \hline
+                     Content 0 & mem[181] \\
+                     \hline
+                     Content 1 & mem[44] \\
+                     \hline
+                     Content 2 & mem[186] \\
+                     \hline
+                     Content 3 & mem[253] \\
+                     \hline
+                     Content 4 & mem[191] \\
+                     \hline
+                     Content 5 & mem[88]\\
+                     \hline
+                     Content 6 & mem[190] \\
+                     \hline
+                     Content 7 & mem[14] \\
+                     \hline
+                    \end{tabular}
+                \end{center}
+        \end{enumerate}
+    \item \# of sets = 8 / 2 = 4 ; \# of offset bit = 1
+        \begin{enumerate}
+            \item \begin{center}
+                    \begin{tabular}{ |c|c|c|c|c|c| }
+                     \hline
+                     decimal address & binary address & tag & offset & LRU & MRU \\
+                     \hline
+                     3 & 0000 0011 & 0000001 & 1 & MISS & MISS \\
+                     \hline
+                     180 & 1011 0100 & 1011010 & 0 & MISS & MISS  \\
+                     \hline
+                     43 & 0010 1011 & 0010101 & 1 & MISS & MISS \\
+                     \hline
+                     2 & 0000 0010 & 0000001 & 0 & HIT & HIT \\
+                     \hline
+                     191 & 1011 1111 & 1011111 & 1 & MISS & MISS\\
+                     \hline
+                     88 & 0101 1000 & 0101100 & 0 & MISS & MISS \\
+                     \hline
+                     190 & 1011 1110 & 1011111 & 0 & HIT & MISS \\
+                     \hline
+                     14 & 0000 1110 & 0000111 & 0 & MISS & MISS \\
+                     \hline
+                     181 & 1011 0101 & 1011010 & 1 & MISS & HIT \\
+                     \hline
+                     44 & 0010 1100 & 0010110 & 0 & MISS & MISS \\
+                     \hline
+                     186 & 1011 1010 & 1011101 & 0 & MISS & MISS \\
+                     \hline
+                     253 & 1111 1101 & 1111110 & 1 & MISS & MISS \\
+                     \hline
+                     MISS RATE & & & & \math{\frac{10}{12} = \frac{5}{6}} & \math{\frac{10}{12} = \frac{5}{6}}\\
+                     \hline
+                    \end{tabular}
+                \end{center}
+            \item The best situation is 
+                \begin{itemize}
+                    \item 2 and 3
+                    \item 180 and 181
+                    \item 190 and 191
+                \end{itemize}
+                so we have MISS RATE = \math{\frac{9}{12} = \frac{3}{4}} 
+        \end{enumerate}
+    \item 
+        \begin{enumerate}
+            \item 
+                \begin{itemize}
+                    \item
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot miss\:rate \\
+                                &=1.5 + \frac{Main\:Memory\:Access\:Time}{\frac{1}{Processor\:Speed}}  \cdot 7\%\\
+                                &=1.5 + \frac{100ns}{\frac{1}{2Ghz}} \cdot 7\% \\
+                                &= 15.5
+                            \end{split}
+                        \end{equation}
+                    \item [Double]
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot miss\:rate \\
+                                &=1.5 + \frac{Main\:Memory\:Access\:Time}{\frac{1}{Processor\:Speed}} \cdot 7\% \\
+                                &=1.5 + \frac{100ns \cdot 2}{\frac{1}{2Ghz}} \cdot 7\% \\
+                                &= 29.5
+                            \end{split}
+                        \end{equation}
+                    \item [Half]
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot miss\:rate \\
+                                &=1.5 + \frac{Main\:Memory\:Access\:Time}{\frac{1}{Processor\:Speed}} \cdot 7\% \\
+                                &=1.5 + \frac{100ns \cdot 0.5}{\frac{1}{2Ghz}} \cdot 7\% \\
+                                &= 8.5
+                            \end{split}
+                        \end{equation}
+                \end{itemize}
+            \item 
+                \begin{itemize}
+                    \item 
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate(direct) + 2^{nd} speed(direct) \cdot 1^{st}miss\:rate \\
+                                &= 1.5 + \frac{100ns}{\frac{1}{2Ghz}} \cdot 3.5\% + 12 \cdot 7\% \\
+                                &= 9.34
+                            \end{split}
+                        \end{equation}
+                    \item [Double]
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate(direct) + 2^{nd} speed(direct) \cdot 1^{st}miss\:rate \\
+                                &= 1.5 + \frac{100ns \cdot 2}{\frac{1}{2Ghz}} \cdot 3.5\% + 12 \cdot 7\% \\
+                                &= 16.34
+                            \end{split}
+                        \end{equation}
+                    \item [Half]
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate(direct) + 2^{nd} speed(direct) \cdot 1^{st}miss\:rate \\
+                                &= 1.5 + \frac{100ns \cdot 0.5}{\frac{1}{2Ghz}} \cdot 3.5\% + 12 \cdot 7\% \\
+                                &= 5.84
+                            \end{split}
+                        \end{equation}
+                \end{itemize}
+            \item 
+                \begin{itemize}
+                    \item 
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate(8 way) + 2^{nd} speed(8 way) \cdot 1^{st}miss\:rate \\
+                                &= 1.5 + \frac{100ns}{\frac{1}{2Ghz}} \cdot 1.5\% + 28 \cdot 7\% \\
+                                &= 6.46
+                            \end{split}
+                        \end{equation}
+                    \item [Double]
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate(8 way) + 2^{nd} speed(8 way) \cdot 1^{st}miss\:rate \\
+                                &= 1.5 + \frac{100ns \cdot 2}{\frac{1}{2Ghz}} \cdot 1.5\% + 28 \cdot 7\% \\
+                                &= 9.46
+                            \end{split}
+                        \end{equation}
+                    \item [Half]
+                        \begin{equation}
+                            \begin{split}
+                                Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate(8 way) + 2^{nd} speed(8 way) \cdot 1^{st}miss\:rate \\
+                                &= 1.5 + \frac{100ns \cdot 0.5}{\frac{1}{2Ghz}} \cdot 1.5\% + 28 \cdot 7\% \\
+                                &= 4.96
+                            \end{split}
+                        \end{equation}
+                \end{itemize}
+        \end{enumerate}
+    \item
+        \begin{equation}
+            \begin{split}
+                Actual\:CPI &= Base\:CPI + 1^{st} + 2^{nd} + 3^{rd} Miss\:Rate\:Per\:Instruction \\
+                &= 1.5 + \frac{100ns}{\frac{1}{2Ghz}} \cdot 1.3\% + 50 \cdot 3.5\% + 12 \cdot 7\% \\
+                &= 6.69, \text{and it does not provide better performance.}
+            \end{split}
+        \end{equation}
+        \begin{itemize}
+            \item [Advs]
+                \begin{itemize}
+                    \item Reduced global miss rate
+                    \item Smaller access time compared to main memory
+                    \item More elements would be available 
+                \end{itemize}
+            \item [DisAdvs]
+                \begin{itemize}
+                    \item The reduced global miss rate could be ignored compared with the secondary cache memory
+                    \item Access is slower compared with the primary cache memory
+                    \item Brings more complicated design and increase costs
+                \end{itemize}
+        \end{itemize}
+    \item Let \math{X} as the number of off-chip cache we need
+        \begin{equation}
+            \begin{split}
+                 Actual\:CPI &= Base\:CPI + miss\:penalty \cdot 2^{nd} miss\:rate + 2^{nd} speed \cdot 1^{st} miss\:rate \\
+                 &= 1.5 + \frac{100ns}{\frac{1}{2Ghz}} \cdot (4\% - 0.7\% X) + 50 \cdot 7\% \\
+                 &= 13- 1.4X
+            \end{split}
+        \end{equation}
+        \begin{itemize}
+            \item [Direct Map] \math{13 - 1.4X = 9.34}; \math{X \approx 2}. The size should be \math{1MiB + 0.5 MiB = 1.5MiB}, including the original cache
+            \item [8-way] \math{13 - 1.4X = 6.46}; \math{X \approx 4}. The size should be \math{2MiB + 0.5 MiB = 2.5MiB}, including the original cache
+        \end{itemize}
+\end{enumerate}
+
+\end{document}
